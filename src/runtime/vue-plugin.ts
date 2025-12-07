@@ -60,7 +60,7 @@ function createTranslateFunction(
  *
  * @example
  * // In _vueEntrypoint.ts or main.ts
- * import { ezI18nVue } from 'ez-i18n/vue';
+ * import { ezI18nVue } from '@zachhandley/ez-i18n/vue';
  *
  * export default (app) => {
  *   app.use(ezI18nVue);
@@ -105,7 +105,7 @@ export const ezI18nVue: Plugin = {
  *
  * @example
  * <script setup>
- * import { useI18n } from 'ez-i18n/vue';
+ * import { useI18n } from '@zachhandley/ez-i18n/vue';
  *
  * const { t, locale, setLocale } = useI18n();
  * const greeting = t('welcome.greeting');

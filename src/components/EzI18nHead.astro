@@ -7,7 +7,7 @@
  *
  * @example
  * ---
- * import { EzI18nHead } from 'ez-i18n/astro';
+ * import { EzI18nHead } from '@zachhandley/ez-i18n/astro';
  * const { locale, translations } = Astro.locals;
  * ---
  * <html lang={locale}>
@@ -50,7 +50,7 @@ const serializedTranslations = JSON.stringify(translations);
 
 <script>
   // Import and initialize the runtime stores
-  import { initLocale, setTranslations } from 'ez-i18n/runtime';
+  import { initLocale, setTranslations } from '@zachhandley/ez-i18n/runtime';
 
   // Get initialization data from inline script
   const initData = (window as any).__EZ_I18N_INIT__;

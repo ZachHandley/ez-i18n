@@ -11,7 +11,7 @@ export type { EzI18nConfig, TranslateFunction } from './types';
  *
  * @example
  * // astro.config.ts
- * import ezI18n from 'ez-i18n';
+ * import ezI18n from '@zachhandley/ez-i18n';
  *
  * export default defineConfig({
  *   integrations: [
@@ -19,8 +19,8 @@ export type { EzI18nConfig, TranslateFunction } from './types';
  *       locales: ['en', 'es', 'fr'],
  *       defaultLocale: 'en',
  *       translations: {
- *         en: () => import('./src/i18n/en'),
- *         es: () => import('./src/i18n/es'),
+ *         en: './src/i18n/en.json',
+ *         es: './src/i18n/es.json',
  *       },
  *     }),
  *   ],
@@ -46,7 +46,7 @@ export default function ezI18n(config: EzI18nConfig): AstroIntegration {
 
         // Add locale detection middleware
         addMiddleware({
-          entrypoint: 'ez-i18n/middleware',
+          entrypoint: '@zachhandley/ez-i18n/middleware',
           order: 'pre',
         });
 

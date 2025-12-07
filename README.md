@@ -1,11 +1,11 @@
-# ez-i18n
+# @zachhandley/ez-i18n
 
 Cookie-based i18n for Astro + Vue. No URL prefixes, reactive language switching.
 
 ## Installation
 
 ```bash
-pnpm add ez-i18n nanostores @nanostores/persistent
+pnpm add @zachhandley/ez-i18n nanostores @nanostores/persistent
 # If using Vue:
 pnpm add @nanostores/vue
 ```
@@ -18,7 +18,7 @@ pnpm add @nanostores/vue
 // astro.config.ts
 import { defineConfig } from 'astro/config';
 import vue from '@astrojs/vue';
-import ezI18n from 'ez-i18n';
+import ezI18n from '@zachhandley/ez-i18n';
 
 export default defineConfig({
   integrations: [
@@ -28,9 +28,9 @@ export default defineConfig({
       defaultLocale: 'en',
       cookieName: 'my-locale', // optional, defaults to 'ez-locale'
       translations: {
-        en: './src/i18n/en.ts',
-        es: './src/i18n/es.ts',
-        fr: './src/i18n/fr.ts',
+        en: './src/i18n/en.json',
+        es: './src/i18n/es.json',
+        fr: './src/i18n/fr.json',
       },
     }),
   ],
@@ -39,20 +39,21 @@ export default defineConfig({
 
 ### Translation Files
 
-```typescript
-// src/i18n/en.ts
-export default {
-  common: {
-    welcome: 'Welcome',
-    save: 'Save',
-    cancel: 'Cancel',
+```json
+{
+  "common": {
+    "welcome": "Welcome",
+    "save": "Save",
+    "cancel": "Cancel"
   },
-  auth: {
-    login: 'Log in',
-    signup: 'Sign up',
-  },
-};
+  "auth": {
+    "login": "Log in",
+    "signup": "Sign up"
+  }
+}
 ```
+
+Create similar files for each locale: `src/i18n/en.json`, `src/i18n/es.json`, etc.
 
 ### Layout Setup
 
@@ -61,7 +62,7 @@ Add the `EzI18nHead` component to your layout's head for automatic hydration:
 ```astro
 ---
 // src/layouts/Layout.astro
-import { EzI18nHead } from 'ez-i18n/astro';
+import { EzI18nHead } from '@zachhandley/ez-i18n/astro';
 const { locale, translations } = Astro.locals;
 ---
 
@@ -93,7 +94,7 @@ const { locale, translations } = Astro.locals;
 
 ```vue
 <script setup lang="ts">
-import { useI18n } from 'ez-i18n/vue';
+import { useI18n } from '@zachhandley/ez-i18n/vue';
 import { translationLoaders } from 'ez-i18n:translations';
 
 const { t, locale, setLocale } = useI18n();
@@ -126,7 +127,7 @@ Register the Vue plugin in your entrypoint:
 ```typescript
 // src/_vueEntrypoint.ts
 import type { App } from 'vue';
-import { ezI18nVue } from 'ez-i18n/vue';
+import { ezI18nVue } from '@zachhandley/ez-i18n/vue';
 
 export default (app: App) => {
   app.use(ezI18nVue);

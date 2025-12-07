@@ -48,7 +48,7 @@ export const cookieName = ${JSON.stringify(resolved.cookieName)};
       // ez-i18n:runtime - Runtime exports for Astro files
       if (id === RESOLVED_PREFIX + VIRTUAL_RUNTIME) {
         return `
-import { effectiveLocale, translations, setLocale, initLocale } from 'ez-i18n/runtime';
+import { effectiveLocale, translations, setLocale, initLocale } from '@zachhandley/ez-i18n/runtime';
 
 export { setLocale, initLocale };
 export { effectiveLocale as locale };
