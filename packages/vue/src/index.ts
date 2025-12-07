@@ -2,7 +2,7 @@ import type { App, Plugin, ComputedRef } from 'vue';
 import { computed } from 'vue';
 import { useStore } from '@nanostores/vue';
 // Import from package path (not relative) to ensure shared store instance
-import { effectiveLocale, translations, setLocale } from '@zachhandley/ez-i18n/runtime';
+import { effectiveLocale, translations, setLocale, initLocale, setTranslations } from '@zachhandley/ez-i18n/runtime';
 import type { TranslateFunction } from '@zachhandley/ez-i18n';
 
 /**
@@ -77,6 +77,14 @@ function createTranslateFunction(
  */
 export const ezI18nVue: Plugin = {
   install(app: App) {
+    // Check if stores need initialization from global data
+    // This handles cases where Vue bundles separately from EzI18nHead
+    const g = globalThis as any;
+    if (g.__EZ_I18N_INIT__) {
+      initLocale(g.__EZ_I18N_INIT__.locale, g.__EZ_I18N_INIT__.translations);
+      setTranslations(g.__EZ_I18N_INIT__.translations);
+    }
+
     // Get reactive store values
     const locale = useStore(effectiveLocale);
     const trans = useStore(translations);

@@ -1,7 +1,14 @@
 import { useStore } from '@nanostores/react';
 // Import from package path (not relative) to ensure shared store instance
-import { effectiveLocale, translations, setLocale } from '@zachhandley/ez-i18n/runtime';
+import { effectiveLocale, translations, setLocale, initLocale, setTranslations } from '@zachhandley/ez-i18n/runtime';
 import type { TranslateFunction } from '@zachhandley/ez-i18n';
+
+// Initialize stores from global data if available (handles separate Vite bundles)
+const g = globalThis as any;
+if (g.__EZ_I18N_INIT__) {
+  initLocale(g.__EZ_I18N_INIT__.locale, g.__EZ_I18N_INIT__.translations);
+  setTranslations(g.__EZ_I18N_INIT__.translations);
+}
 
 /**
  * Get nested value from object using dot notation

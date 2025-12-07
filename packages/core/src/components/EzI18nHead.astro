@@ -43,8 +43,8 @@ const serializedTranslations = JSON.stringify(translations);
     const locale = script.dataset.ezI18nLocale;
     const translations = JSON.parse(script.dataset.ezI18nTranslations || '{}');
 
-    // Store for runtime initialization
-    window.__EZ_I18N_INIT__ = { locale, translations };
+    // Store for runtime initialization (globalThis is SSR-safe and equals window in browsers)
+    globalThis.__EZ_I18N_INIT__ = { locale, translations };
   })();
 </script>
 
@@ -53,10 +53,11 @@ const serializedTranslations = JSON.stringify(translations);
   import { initLocale, setTranslations } from '@zachhandley/ez-i18n/runtime';
 
   // Get initialization data from inline script
-  const initData = (window as any).__EZ_I18N_INIT__;
+  // Note: Don't delete __EZ_I18N_INIT__ here - other bundles (Vue, React)
+  // may need to read it to initialize their own store instances
+  const initData = (globalThis as any).__EZ_I18N_INIT__;
   if (initData) {
     initLocale(initData.locale, initData.translations);
     setTranslations(initData.translations);
-    delete (window as any).__EZ_I18N_INIT__;
   }
 </script>
