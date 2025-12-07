@@ -269,6 +269,9 @@ export function t(key, params) {
     handleHotUpdate({ file, server }) {
       if (!isDev) return;
 
+      // Only process JSON files
+      if (!file.endsWith('.json')) return;
+
       // Check if the changed file is a translation file
       for (const info of translationInfo.values()) {
         if (info.files.includes(file)) {
@@ -412,7 +415,7 @@ function generateDevTranslationsModule(
 
         loaderEntries.push(`  ${JSON.stringify(locale)}: async () => {
     const fileInfos = [${fileEntries.join(', ')}];
-    const modules = await Promise.all(fileInfos.map(f => import(f.path)));
+    const modules = await Promise.all(fileInfos.map(f => import(/* @vite-ignore */ f.path)));
     const wrapped = modules.map((m, i) => __wrapWithNamespace(fileInfos[i].namespace, m.default ?? m));
     return __deepMerge({}, ...wrapped);
   }`);
@@ -503,7 +506,7 @@ function generateBuildTranslationsModule(
 
         loaderEntries.push(`  ${JSON.stringify(locale)}: async () => {
     const fileInfos = [${fileEntries.join(', ')}];
-    const modules = await Promise.all(fileInfos.map(f => import(f.path)));
+    const modules = await Promise.all(fileInfos.map(f => import(/* @vite-ignore */ f.path)));
     const wrapped = modules.map((m, i) => __wrapWithNamespace(fileInfos[i].namespace, m.default ?? m));
     return __deepMerge({}, ...wrapped);
   }`);
