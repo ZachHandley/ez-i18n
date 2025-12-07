@@ -1,0 +1,62 @@
+---
+/**
+ * EzI18nHead - Astro component for i18n hydration setup
+ *
+ * Place this in your layout's <head> to properly initialize
+ * the i18n runtime with server-side loaded translations.
+ *
+ * @example
+ * ---
+ * import { EzI18nHead } from 'ez-i18n/astro';
+ * const { locale, translations } = Astro.locals;
+ * ---
+ * <html lang={locale}>
+ *   <head>
+ *     <EzI18nHead locale={locale} translations={translations} />
+ *   </head>
+ *   <body><slot /></body>
+ * </html>
+ */
+interface Props {
+  /** Current locale code from Astro.locals.locale */
+  locale: string;
+  /** Translations object from Astro.locals.translations */
+  translations: Record<string, unknown>;
+}
+
+const { locale, translations } = Astro.props;
+
+// Serialize translations for inline script
+const serializedTranslations = JSON.stringify(translations);
+---
+
+<script
+  is:inline
+  data-ez-i18n-locale={locale}
+  data-ez-i18n-translations={serializedTranslations}
+>
+  // Initialize ez-i18n runtime with server-provided values
+  (function() {
+    const script = document.currentScript;
+    if (!script) return;
+
+    const locale = script.dataset.ezI18nLocale;
+    const translations = JSON.parse(script.dataset.ezI18nTranslations || '{}');
+
+    // Store for runtime initialization
+    window.__EZ_I18N_INIT__ = { locale, translations };
+  })();
+</script>
+
+<script>
+  // Import and initialize the runtime stores
+  import { initLocale, setTranslations } from 'ez-i18n/runtime';
+
+  // Get initialization data from inline script
+  const initData = (window as any).__EZ_I18N_INIT__;
+  if (initData) {
+    initLocale(initData.locale, initData.translations);
+    setTranslations(initData.translations);
+    delete (window as any).__EZ_I18N_INIT__;
+  }
+</script>

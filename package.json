@@ -1,0 +1,79 @@
+{
+  "name": "ez-i18n",
+  "version": "0.1.0",
+  "description": "Cookie-based i18n for Astro + Vue. No URL prefixes, reactive language switching.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./vue": {
+      "types": "./dist/runtime/vue-plugin.d.ts",
+      "import": "./dist/runtime/vue-plugin.js"
+    },
+    "./middleware": {
+      "import": "./dist/middleware.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js"
+    },
+    "./astro": {
+      "import": "./src/components/EzI18nHead.astro"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "astro",
+    "astro-integration",
+    "i18n",
+    "internationalization",
+    "vue",
+    "cookie-based",
+    "no-url-prefix"
+  ],
+  "author": "Zach Handley <zachhandley@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZachHandley/ez-i18n"
+  },
+  "peerDependencies": {
+    "astro": "^4.0.0 || ^5.0.0",
+    "vue": "^3.4.0",
+    "nanostores": "^0.9.0 || ^0.10.0 || ^0.11.0",
+    "@nanostores/persistent": "^0.10.0",
+    "@nanostores/vue": "^0.10.0"
+  },
+  "peerDependenciesMeta": {
+    "vue": {
+      "optional": true
+    },
+    "@nanostores/vue": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "astro": "^5.1.1",
+    "nanostores": "^0.11.3",
+    "@nanostores/persistent": "^0.10.2",
+    "@nanostores/vue": "^0.10.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vue": "^3.5.13",
+    "vite": "^6.0.3"
+  }
+}
