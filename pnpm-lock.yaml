@@ -11,18 +11,27 @@ importers:
       '@nanostores/persistent':
         specifier: ^0.10.2
         version: 0.10.2(nanostores@0.11.4)
+      '@nanostores/react':
+        specifier: ^1.0.0
+        version: 1.0.0(nanostores@0.11.4)(react@19.2.1)
       '@nanostores/vue':
         specifier: ^0.10.0
         version: 0.10.0(nanostores@0.11.4)(vue@3.5.25(typescript@5.9.3))
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.1
+      '@types/react':
+        specifier: ^19.2.7
+        version: 19.2.7
       astro:
         specifier: ^5.1.1
         version: 5.16.4(@types/node@22.19.1)(rollup@4.53.3)(typescript@5.9.3)
       nanostores:
         specifier: ^0.11.3
         version: 0.11.4
+      react:
+        specifier: ^19.2.1
+        version: 19.2.1
       tsup:
         specifier: ^8.3.5
         version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
@@ -547,6 +556,13 @@ packages:
     peerDependencies:
       nanostores: ^0.9.0 || ^0.10.0 || ^0.11.0
 
+  '@nanostores/react@1.0.0':
+    resolution: {integrity: sha512-eDduyNy+lbQJMg6XxZ/YssQqF6b4OXMFEZMYKPJCCmBevp1lg0g+4ZRi94qGHirMtsNfAWKNwsjOhC+q1gvC+A==}
+    engines: {node: ^20.0.0 || >=22.0.0}
+    peerDependencies:
+      nanostores: ^0.9.0 || ^0.10.0 || ^0.11.0 || ^1.0.0
+      react: '>=18.0.0'
+
   '@nanostores/vue@0.10.0':
     resolution: {integrity: sha512-832RAUbzRfHPs1CdqVEwfvgB2+RD/INji4Zo8bUSEfRO2pQRMMeq479gydnohGpRaa0oNwlfKo7TGFXCghq/1g==}
     engines: {node: ^18.0.0 || >=20.0.0}
@@ -730,6 +746,9 @@ packages:
 
   '@types/node@22.19.1':
     resolution: {integrity: sha512-LCCV0HdSZZZb34qifBsyWlUmok6W7ouER+oQIGBScS8EsZsQbrtFTUrDX4hOl+CS6p7cnNC4td+qrSVGSCTUfQ==}
+
+  '@types/react@19.2.7':
+    resolution: {integrity: sha512-MWtvHrGZLFttgeEj28VXHxpmwYbor/ATPYbBfSFZEIRK0ecCFLl2Qo55z52Hss+UV9CRN7trSeq1zbgx7YDWWg==}
 
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
@@ -1463,6 +1482,10 @@ packages:
 
   radix3@1.1.2:
     resolution: {integrity: sha512-b484I/7b8rDEdSDKckSSBA8knMpcdsXudlE/LNL639wFoHKwLbEkQFZHWEYwDC0wa0FKUcCY+GAF73Z7wxNVFA==}
+
+  react@19.2.1:
+    resolution: {integrity: sha512-DGrYcCWK7tvYMnWh79yrPHt+vdx9tY+1gPZa7nJQtO/p8bLTDaHp4dzwEhQB7pZ4Xe3ok4XKuEPrVuc+wlpkmw==}
+    engines: {node: '>=0.10.0'}
 
   readdirp@4.1.2:
     resolution: {integrity: sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg==}
@@ -2236,6 +2259,11 @@ snapshots:
     dependencies:
       nanostores: 0.11.4
 
+  '@nanostores/react@1.0.0(nanostores@0.11.4)(react@19.2.1)':
+    dependencies:
+      nanostores: 0.11.4
+      react: 19.2.1
+
   '@nanostores/vue@0.10.0(nanostores@0.11.4)(vue@3.5.25(typescript@5.9.3))':
     dependencies:
       nanostores: 0.11.4
@@ -2381,6 +2409,10 @@ snapshots:
   '@types/node@22.19.1':
     dependencies:
       undici-types: 6.21.0
+
+  '@types/react@19.2.7':
+    dependencies:
+      csstype: 3.2.3
 
   '@types/unist@3.0.3': {}
 
@@ -3435,6 +3467,8 @@ snapshots:
   property-information@7.1.0: {}
 
   radix3@1.1.2: {}
+
+  react@19.2.1: {}
 
   readdirp@4.1.2: {}
 

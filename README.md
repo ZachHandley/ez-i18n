@@ -1,13 +1,17 @@
 # @zachhandley/ez-i18n
 
-Cookie-based i18n for Astro + Vue. No URL prefixes, reactive language switching.
+Cookie-based i18n for Astro + Vue + React. No URL prefixes, reactive language switching.
 
 ## Installation
 
 ```bash
 pnpm add @zachhandley/ez-i18n nanostores @nanostores/persistent
+
 # If using Vue:
 pnpm add @nanostores/vue
+
+# If using React:
+pnpm add @nanostores/react
 ```
 
 ## Usage
@@ -62,7 +66,7 @@ Add the `EzI18nHead` component to your layout's head for automatic hydration:
 ```astro
 ---
 // src/layouts/Layout.astro
-import { EzI18nHead } from '@zachhandley/ez-i18n/astro';
+import EzI18nHead from '@zachhandley/ez-i18n/astro';
 const { locale, translations } = Astro.locals;
 ---
 
@@ -134,13 +138,39 @@ export default (app: App) => {
 };
 ```
 
+### In React Components
+
+```tsx
+import { useI18n } from '@zachhandley/ez-i18n/react';
+import { translationLoaders } from 'ez-i18n:translations';
+
+function MyComponent() {
+  const { t, locale, setLocale } = useI18n();
+
+  async function switchLocale(newLocale: string) {
+    await setLocale(newLocale, {
+      loadTranslations: translationLoaders[newLocale],
+    });
+  }
+
+  return (
+    <div>
+      <h1>{t('common.welcome')}</h1>
+      <p>{t('greeting', { name: 'World' })}</p>
+      <button onClick={() => switchLocale('es')}>Español</button>
+      <button onClick={() => switchLocale('fr')}>Français</button>
+    </div>
+  );
+}
+```
+
 ## Features
 
 - **No URL prefixes** - Locale stored in cookie, not URL path
 - **Reactive** - Language changes update immediately without page reload
 - **SSR compatible** - Proper hydration with server-rendered locale
 - **Vue integration** - Global `$t()`, `$locale`, `$setLocale` in templates
-- **Composable API** - `useI18n()` for Composition API usage
+- **React integration** - `useI18n()` hook for React components
 - **Middleware included** - Auto-detects locale from cookie, query param, or Accept-Language header
 
 ## Locale Detection Priority
@@ -195,9 +225,15 @@ setLocale('es', { loadTranslations: translationLoaders['es'] });
 
 ### `useI18n()`
 
-Vue composable for Composition API usage.
+Hook for Vue (Composition API) and React.
 
 ```typescript
+// Vue
+import { useI18n } from '@zachhandley/ez-i18n/vue';
+
+// React
+import { useI18n } from '@zachhandley/ez-i18n/react';
+
 const { t, locale, setLocale } = useI18n();
 ```
 
