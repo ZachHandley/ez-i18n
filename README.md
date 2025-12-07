@@ -59,6 +59,118 @@ export default defineConfig({
 
 Create similar files for each locale: `src/i18n/en.json`, `src/i18n/es.json`, etc.
 
+### Multi-File Translations
+
+ez-i18n supports flexible translation file organization:
+
+#### Auto-Discovery (Zero Config)
+
+Just put your files in `public/i18n/` and ez-i18n will discover them automatically:
+
+```
+public/i18n/
+  en/
+    common.json
+    auth.json
+  es/
+    common.json
+    auth.json
+```
+
+```typescript
+// astro.config.ts - locales auto-discovered from folder names!
+ezI18n({
+  defaultLocale: 'en',
+  // No locales or translations needed - auto-discovered
+})
+```
+
+#### Base Directory
+
+Point to a folder and locales are discovered from subfolders:
+
+```typescript
+ezI18n({
+  defaultLocale: 'en',
+  translations: './src/i18n/',  // Discovers en/, es/, fr/ folders
+})
+```
+
+#### Per-Locale with Multiple Formats
+
+Mix and match different formats per locale:
+
+```typescript
+ezI18n({
+  locales: ['en', 'es', 'fr', 'de'],
+  defaultLocale: 'en',
+  translations: {
+    en: './src/i18n/en.json',              // Single file
+    es: './src/i18n/es/',                   // Folder (all JSONs merged)
+    fr: './src/i18n/fr/**/*.json',          // Glob pattern
+    de: ['./src/i18n/de/common.json',       // Array of files
+         './src/i18n/de/auth.json'],
+  },
+})
+```
+
+#### Merge Order
+
+When using multiple files per locale, files are merged **alphabetically by filename**. Later files override earlier ones for conflicting keys.
+
+```
+en/
+  01-common.json    # Loaded first
+  02-features.json  # Loaded second, overrides common
+  99-overrides.json # Loaded last, highest priority
+```
+
+#### Path-Based Namespacing
+
+When using folder-based translation organization, ez-i18n automatically creates namespaces from your file paths. This is **enabled by default** when using folder-based config.
+
+**Example:**
+
+```
+public/i18n/
+  en/
+    auth/
+      login.json     # { "title": "Sign In", "button": "Log In" }
+      signup.json    # { "title": "Create Account" }
+    common.json      # { "welcome": "Welcome" }
+```
+
+Access translations using dot notation that mirrors the folder structure:
+
+```typescript
+$t('auth.login.title')     // "Sign In"
+$t('auth.login.button')    // "Log In"
+$t('auth.signup.title')    // "Create Account"
+$t('common.welcome')       // "Welcome"
+```
+
+**Disable path-based namespacing:**
+
+If you prefer to manage namespaces manually within your JSON files, you can disable this feature:
+
+```typescript
+ezI18n({
+  defaultLocale: 'en',
+  translations: './src/i18n/',
+  pathBasedNamespacing: false,  // Disable automatic path namespacing
+})
+```
+
+With `pathBasedNamespacing: false`, the file structure is ignored and keys are used directly from each JSON file.
+
+#### Cache File
+
+A `.ez-i18n.json` cache file is generated to speed up subsequent builds. Add it to `.gitignore`:
+
+```gitignore
+.ez-i18n.json
+```
+
 ### Layout Setup
 
 Add the `EzI18nHead` component to your layout's head for automatic hydration:
@@ -172,6 +284,10 @@ function MyComponent() {
 - **Vue integration** - Global `$t()`, `$locale`, `$setLocale` in templates
 - **React integration** - `useI18n()` hook for React components
 - **Middleware included** - Auto-detects locale from cookie, query param, or Accept-Language header
+- **Multi-file support** - Organize translations in folders, use globs, or arrays
+- **Auto-discovery** - Automatic locale detection from folder structure
+- **Path-based namespacing** - Automatic namespacing from folder structure (`auth/login.json` becomes `auth.login.*`)
+- **HMR in dev** - Hot reload translation changes without restart
 
 ## Locale Detection Priority
 
@@ -188,10 +304,17 @@ Astro integration function.
 
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
-| `locales` | `string[]` | Yes | Supported locale codes |
+| `locales` | `string[]` | No | Supported locale codes (auto-discovered if not provided) |
 | `defaultLocale` | `string` | Yes | Fallback locale |
 | `cookieName` | `string` | No | Cookie name (default: `'ez-locale'`) |
-| `translations` | `Record<string, string>` | No | Paths to translation files (auto-loaded) |
+| `translations` | `string \| Record<string, TranslationPath>` | No | Base directory or per-locale paths (default: `./public/i18n/`) |
+| `pathBasedNamespacing` | `boolean` | No | Auto-namespace translations from folder paths (default: `true` for folder-based config) |
+
+**TranslationPath** can be:
+- Single file: `'./src/i18n/en.json'`
+- Folder: `'./src/i18n/en/'`
+- Glob: `'./src/i18n/en/**/*.json'`
+- Array: `['./common.json', './auth.json']`
 
 ### `EzI18nHead`
 

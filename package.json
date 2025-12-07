@@ -1,6 +1,6 @@
 {
   "name": "@zachhandley/ez-i18n",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "publishConfig": {
     "access": "public"
   },
@@ -30,6 +30,10 @@
     "./react": {
       "types": "./dist/runtime/react-plugin.d.ts",
       "import": "./dist/runtime/react-plugin.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js"
     }
   },
   "files": [
@@ -63,6 +67,9 @@
   },
   "bugs": {
     "url": "https://github.com/zachhandley/ez-i18n/issues"
+  },
+  "dependencies": {
+    "tinyglobby": "^0.2.15"
   },
   "peerDependencies": {
     "@nanostores/persistent": "^0.10.0",

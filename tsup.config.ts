@@ -8,6 +8,7 @@ export default defineConfig([
       'src/runtime/index.ts',
       'src/runtime/vue-plugin.ts',
       'src/runtime/react-plugin.ts',
+      'src/utils/index.ts',
     ],
     format: ['esm'],
     dts: true,
