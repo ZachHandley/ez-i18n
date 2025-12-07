@@ -5,13 +5,14 @@ Cookie-based i18n for Astro + Vue + React. No URL prefixes, reactive language sw
 ## Installation
 
 ```bash
+# Core package (required) - includes Astro integration + runtime
 pnpm add @zachhandley/ez-i18n nanostores @nanostores/persistent
 
-# If using Vue:
-pnpm add @nanostores/vue
+# For Vue projects
+pnpm add @zachhandley/ez-i18n-vue @nanostores/vue
 
-# If using React:
-pnpm add @nanostores/react
+# For React projects
+pnpm add @zachhandley/ez-i18n-react @nanostores/react
 ```
 
 ## Usage
@@ -210,7 +211,7 @@ const { locale, translations } = Astro.locals;
 
 ```vue
 <script setup lang="ts">
-import { useI18n } from '@zachhandley/ez-i18n/vue';
+import { useI18n } from '@zachhandley/ez-i18n-vue';
 import { translationLoaders } from 'ez-i18n:translations';
 
 const { t, locale, setLocale } = useI18n();
@@ -243,7 +244,7 @@ Register the Vue plugin in your entrypoint:
 ```typescript
 // src/_vueEntrypoint.ts
 import type { App } from 'vue';
-import { ezI18nVue } from '@zachhandley/ez-i18n/vue';
+import { ezI18nVue } from '@zachhandley/ez-i18n-vue';
 
 export default (app: App) => {
   app.use(ezI18nVue);
@@ -253,7 +254,7 @@ export default (app: App) => {
 ### In React Components
 
 ```tsx
-import { useI18n } from '@zachhandley/ez-i18n/react';
+import { useI18n } from '@zachhandley/ez-i18n-react';
 import { translationLoaders } from 'ez-i18n:translations';
 
 function MyComponent() {
@@ -352,10 +353,10 @@ Hook for Vue (Composition API) and React.
 
 ```typescript
 // Vue
-import { useI18n } from '@zachhandley/ez-i18n/vue';
+import { useI18n } from '@zachhandley/ez-i18n-vue';
 
 // React
-import { useI18n } from '@zachhandley/ez-i18n/react';
+import { useI18n } from '@zachhandley/ez-i18n-react';
 
 const { t, locale, setLocale } = useI18n();
 ```

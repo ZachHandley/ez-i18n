@@ -1,0 +1,78 @@
+{
+  "name": "@zachhandley/ez-i18n",
+  "version": "0.2.3",
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "Cookie-based i18n for Astro. Core package with Astro integration and runtime.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./middleware": {
+      "import": "./dist/middleware.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js"
+    },
+    "./astro": {
+      "import": "./src/components/EzI18nHead.astro"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "astro",
+    "astro-integration",
+    "i18n",
+    "internationalization",
+    "cookie-based",
+    "no-url-prefix"
+  ],
+  "author": "Zach Handley <zachhandley@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/zachhandley/ez-i18n#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zachhandley/ez-i18n.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/zachhandley/ez-i18n/issues"
+  },
+  "dependencies": {
+    "tinyglobby": "^0.2.15"
+  },
+  "peerDependencies": {
+    "@nanostores/persistent": "^0.10.0",
+    "astro": "^4.0.0 || ^5.0.0",
+    "nanostores": "^0.9.0 || ^0.10.0 || ^0.11.0"
+  },
+  "devDependencies": {
+    "@nanostores/persistent": "^0.10.2",
+    "@types/node": "^22.0.0",
+    "astro": "^5.1.1",
+    "nanostores": "^0.11.3",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3"
+  }
+}

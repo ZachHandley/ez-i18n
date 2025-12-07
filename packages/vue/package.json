@@ -1,0 +1,60 @@
+{
+  "name": "@zachhandley/ez-i18n-vue",
+  "version": "0.2.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "Vue 3 plugin for @zachhandley/ez-i18n",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "i18n",
+    "internationalization",
+    "ez-i18n"
+  ],
+  "author": "Zach Handley <zachhandley@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/zachhandley/ez-i18n#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zachhandley/ez-i18n.git",
+    "directory": "packages/vue"
+  },
+  "bugs": {
+    "url": "https://github.com/zachhandley/ez-i18n/issues"
+  },
+  "peerDependencies": {
+    "@nanostores/vue": "^0.10.0",
+    "@zachhandley/ez-i18n": "workspace:*",
+    "nanostores": "^0.9.0 || ^0.10.0 || ^0.11.0",
+    "vue": "^3.4.0"
+  },
+  "devDependencies": {
+    "@nanostores/vue": "^0.10.0",
+    "@types/node": "^22.0.0",
+    "nanostores": "^0.11.3",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.0",
+    "vue": "^3.5.13"
+  }
+}

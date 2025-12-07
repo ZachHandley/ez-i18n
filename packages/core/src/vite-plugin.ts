@@ -10,6 +10,9 @@ import {
   detectPathType,
   getNamespaceFromPath,
   generateNamespaceWrapperCode,
+  isInPublicDir,
+  toPublicUrl,
+  getLocaleBaseDirForNamespace,
 } from './utils/translations';
 import * as path from 'node:path';
 
@@ -21,10 +24,12 @@ const RESOLVED_PREFIX = '\0';
 interface TranslationInfo {
   locale: string;
   files: string[];
-  /** Glob pattern for dev mode HMR (if applicable) */
-  globPattern?: string;
+  /** Glob pattern for dev mode HMR (if applicable, null for public files) */
+  globPattern?: string | null;
   /** Base directory for this locale (used for namespace calculation) */
   localeBaseDir?: string;
+  /** Whether files are in the public directory (use fetch instead of import) */
+  isPublic?: boolean;
 }
 
 /**
@@ -145,22 +150,26 @@ export function vitePlugin(config: EzI18nConfig): Plugin {
         // Build translation info for each locale
         for (const locale of finalLocales) {
           const files = translations[locale] || [];
+          // Check if files are in public directory
+          const filesInPublic = files.length > 0 && isInPublicDir(files[0], projectRoot);
+
           const info: TranslationInfo = {
             locale,
             files,
             localeBaseDir: localeBaseDirs[locale],
+            isPublic: filesInPublic,
           };
 
-          // For dev mode, determine if we can use import.meta.glob
-          if (isDev && config.translations) {
+          // For dev mode, determine if we can use import.meta.glob (not for public files)
+          if (isDev && config.translations && !filesInPublic) {
             const localeConfig = typeof config.translations === 'string'
-              ? path.join(config.translations, locale)
+              ? path.join(config.translations, locale) + '/'  // Trailing slash ensures detectPathType returns 'folder'
               : config.translations[locale];
 
             if (localeConfig && typeof localeConfig === 'string') {
               const pathType = detectPathType(localeConfig);
               if (pathType === 'folder' || pathType === 'glob') {
-                // Can use import.meta.glob for HMR
+                // Can use import.meta.glob for HMR (returns null for public files)
                 const basePath = pathType === 'glob'
                   ? localeConfig
                   : toGlobPattern(path.resolve(projectRoot, localeConfig), projectRoot);
@@ -337,6 +346,7 @@ export function t(key, params) {
 /**
  * Generate the translations virtual module for dev mode.
  * Uses import.meta.glob where possible for HMR support.
+ * Uses fetch() for files in public/ directory (with fs fallback for SSR).
  */
 function generateDevTranslationsModule(
   translationInfo: Map<string, TranslationInfo>,
@@ -345,6 +355,7 @@ function generateDevTranslationsModule(
 ): string {
   const imports: string[] = [];
   const loaderEntries: string[] = [];
+  let needsPublicLoader = false;
 
   // Add deepMerge inline for runtime merging
   imports.push(getDeepMergeCode());
@@ -358,10 +369,40 @@ function generateDevTranslationsModule(
     if (info.files.length === 0) {
       // No files - return empty object
       loaderEntries.push(`  ${JSON.stringify(locale)}: async () => ({})`);
+    } else if (info.isPublic) {
+      // Public directory files - use fetch in browser, fs in SSR
+      needsPublicLoader = true;
+      if (pathBasedNamespacing && info.localeBaseDir) {
+        const fileEntries = info.files.map(f => {
+          const url = toPublicUrl(f, projectRoot);
+          const absolutePath = f.replace(/\\/g, '/');
+          const namespace = getNamespaceFromPath(f, info.localeBaseDir!);
+          return `{ url: ${JSON.stringify(url)}, path: ${JSON.stringify(absolutePath)}, namespace: ${JSON.stringify(namespace)} }`;
+        });
+
+        loaderEntries.push(`  ${JSON.stringify(locale)}: async () => {
+    const fileInfos = [${fileEntries.join(', ')}];
+    const responses = await Promise.all(fileInfos.map(f => __loadPublicJson(f.url, f.path)));
+    const wrapped = responses.map((content, i) => __wrapWithNamespace(fileInfos[i].namespace, content));
+    return __deepMerge({}, ...wrapped);
+  }`);
+      } else {
+        const fileEntries = info.files.map(f => {
+          const url = toPublicUrl(f, projectRoot);
+          const absolutePath = f.replace(/\\/g, '/');
+          return `{ url: ${JSON.stringify(url)}, path: ${JSON.stringify(absolutePath)} }`;
+        });
+        loaderEntries.push(`  ${JSON.stringify(locale)}: async () => {
+    const files = [${fileEntries.join(', ')}];
+    const responses = await Promise.all(files.map(f => __loadPublicJson(f.url, f.path)));
+    if (responses.length === 1) return responses[0];
+    return __deepMerge({}, ...responses);
+  }`);
+      }
     } else if (info.globPattern && pathBasedNamespacing && info.localeBaseDir) {
       // Use import.meta.glob with namespace wrapping
       const varName = `__${locale}Modules`;
-      const localeBaseDir = info.localeBaseDir.replace(/\\/g, '/');
+      const localeBaseDirForNs = getLocaleBaseDirForNamespace(info.localeBaseDir, projectRoot);
       imports.push(
         `const ${varName} = import.meta.glob(${JSON.stringify(info.globPattern)}, { eager: true, import: 'default' });`
       );
@@ -369,10 +410,11 @@ function generateDevTranslationsModule(
       loaderEntries.push(`  ${JSON.stringify(locale)}: async () => {
     const entries = Object.entries(${varName});
     if (entries.length === 0) return {};
-    const localeBaseDir = ${JSON.stringify(localeBaseDir)};
+    const localeBaseDir = ${JSON.stringify(localeBaseDirForNs)};
     const wrapped = entries.map(([filePath, content]) => {
-      // Extract relative path from locale base dir
-      const relativePath = filePath.replace(localeBaseDir + '/', '').replace(/\\.json$/i, '');
+      // Extract relative path from locale base dir - filePath starts with /
+      const normalizedPath = filePath.startsWith('/') ? filePath.slice(1) : filePath;
+      const relativePath = normalizedPath.replace(localeBaseDir + '/', '').replace(/\\.json$/i, '');
       const namespace = relativePath.replace(/[\\/]/g, '.').replace(/\\.index$/, '');
       return __wrapWithNamespace(namespace, content);
     });
@@ -392,7 +434,7 @@ function generateDevTranslationsModule(
     return __deepMerge({}, ...modules);
   }`);
     } else if (info.files.length === 1) {
-      // Single file
+      // Single file - use import
       const relativePath = toRelativeImport(info.files[0], projectRoot);
       if (pathBasedNamespacing && info.localeBaseDir) {
         const namespace = getNamespaceFromPath(info.files[0], info.localeBaseDir);
@@ -434,6 +476,11 @@ function generateDevTranslationsModule(
     }
   }
 
+  // Add public loader helper if needed
+  if (needsPublicLoader) {
+    imports.push(getPublicLoaderCode());
+  }
+
   return `
 ${imports.join('\n')}
 
@@ -465,6 +512,7 @@ export async function loadTranslations(locale) {
 /**
  * Generate the translations virtual module for production builds.
  * Pre-resolves all imports for optimal bundling.
+ * Uses fetch() for files in public/ directory (with fs fallback for SSR).
  */
 function generateBuildTranslationsModule(
   translationInfo: Map<string, TranslationInfo>,
@@ -474,12 +522,51 @@ function generateBuildTranslationsModule(
   const loaderEntries: string[] = [];
   let needsDeepMerge = false;
   let needsNamespaceWrapper = false;
+  let needsPublicLoader = false;
 
   for (const [locale, info] of translationInfo) {
     if (info.files.length === 0) {
       loaderEntries.push(`  ${JSON.stringify(locale)}: async () => ({})`);
+    } else if (info.isPublic) {
+      // Public directory files - use fetch in browser, fs in SSR
+      needsPublicLoader = true;
+      needsDeepMerge = info.files.length > 1;
+      if (pathBasedNamespacing && info.localeBaseDir) {
+        needsNamespaceWrapper = true;
+        const fileEntries = info.files.map(f => {
+          const url = toPublicUrl(f, projectRoot);
+          const absolutePath = f.replace(/\\/g, '/');
+          const namespace = getNamespaceFromPath(f, info.localeBaseDir!);
+          return `{ url: ${JSON.stringify(url)}, path: ${JSON.stringify(absolutePath)}, namespace: ${JSON.stringify(namespace)} }`;
+        });
+
+        loaderEntries.push(`  ${JSON.stringify(locale)}: async () => {
+    const fileInfos = [${fileEntries.join(', ')}];
+    const responses = await Promise.all(fileInfos.map(f => __loadPublicJson(f.url, f.path)));
+    const wrapped = responses.map((content, i) => __wrapWithNamespace(fileInfos[i].namespace, content));
+    return __deepMerge({}, ...wrapped);
+  }`);
+      } else {
+        const fileEntries = info.files.map(f => {
+          const url = toPublicUrl(f, projectRoot);
+          const absolutePath = f.replace(/\\/g, '/');
+          return `{ url: ${JSON.stringify(url)}, path: ${JSON.stringify(absolutePath)} }`;
+        });
+        if (fileEntries.length === 1) {
+          const f = info.files[0];
+          const url = toPublicUrl(f, projectRoot);
+          const absolutePath = f.replace(/\\/g, '/');
+          loaderEntries.push(`  ${JSON.stringify(locale)}: () => __loadPublicJson(${JSON.stringify(url)}, ${JSON.stringify(absolutePath)})`);
+        } else {
+          loaderEntries.push(`  ${JSON.stringify(locale)}: async () => {
+    const files = [${fileEntries.join(', ')}];
+    const responses = await Promise.all(files.map(f => __loadPublicJson(f.url, f.path)));
+    return __deepMerge({}, ...responses);
+  }`);
+        }
+      }
     } else if (info.files.length === 1) {
-      // Single file
+      // Single file - use import
       const relativePath = toRelativeImport(info.files[0], projectRoot);
       if (pathBasedNamespacing && info.localeBaseDir) {
         needsNamespaceWrapper = true;
@@ -527,6 +614,7 @@ function generateBuildTranslationsModule(
   const helperCode = [
     needsDeepMerge ? getDeepMergeCode() : '',
     needsNamespaceWrapper ? generateNamespaceWrapperCode() : '',
+    needsPublicLoader ? getPublicLoaderCode() : '',
   ].filter(Boolean).join('\n');
 
   return `
@@ -573,6 +661,25 @@ function __deepMerge(target, ...sources) {
     }
   }
   return result;
+}`;
+}
+
+/**
+ * Inline public JSON loader for the virtual module.
+ * Uses fetch in browser, fs.readFileSync in SSR/Node.
+ */
+function getPublicLoaderCode(): string {
+  return `
+async function __loadPublicJson(url, absolutePath) {
+  if (typeof window !== 'undefined') {
+    // Browser - use fetch with relative URL
+    return fetch(url).then(r => r.json());
+  } else {
+    // SSR/Node - read from filesystem
+    const fs = await import('node:fs');
+    const content = fs.readFileSync(absolutePath, 'utf-8');
+    return JSON.parse(content);
+  }
 }`;
 }
 

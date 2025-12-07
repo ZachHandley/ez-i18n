@@ -1,52 +1,15 @@
 {
-  "name": "@zachhandley/ez-i18n",
-  "version": "0.1.7",
-  "publishConfig": {
-    "access": "public"
-  },
+  "name": "@zachhandley/ez-i18n-monorepo",
+  "version": "0.2.2",
+  "private": true,
   "description": "Cookie-based i18n for Astro + Vue + React. No URL prefixes, reactive language switching.",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./vue": {
-      "types": "./dist/runtime/vue-plugin.d.ts",
-      "import": "./dist/runtime/vue-plugin.js"
-    },
-    "./middleware": {
-      "import": "./dist/middleware.js"
-    },
-    "./runtime": {
-      "types": "./dist/runtime/index.d.ts",
-      "import": "./dist/runtime/index.js"
-    },
-    "./astro": {
-      "import": "./src/components/EzI18nHead.astro"
-    },
-    "./react": {
-      "types": "./dist/runtime/react-plugin.d.ts",
-      "import": "./dist/runtime/react-plugin.js"
-    },
-    "./utils": {
-      "types": "./dist/utils/index.d.ts",
-      "import": "./dist/utils/index.js"
-    }
-  },
-  "files": [
-    "dist",
-    "src"
-  ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit",
-    "prepublishOnly": "pnpm build",
-    "release": "pnpm build && npm publish",
-    "release:dry": "pnpm build && npm publish --dry-run"
+    "build": "pnpm --filter \"./packages/*\" run build",
+    "dev": "pnpm --filter \"./packages/*\" --parallel run dev",
+    "typecheck": "pnpm --filter \"./packages/*\" run typecheck",
+    "clean": "pnpm --filter \"./packages/*\" run clean",
+    "release": "pnpm build && pnpm --filter \"./packages/*\" publish"
   },
   "keywords": [
     "astro",
@@ -68,45 +31,9 @@
   "bugs": {
     "url": "https://github.com/zachhandley/ez-i18n/issues"
   },
-  "dependencies": {
-    "tinyglobby": "^0.2.15"
-  },
-  "peerDependencies": {
-    "@nanostores/persistent": "^0.10.0",
-    "@nanostores/react": "^0.7.0 || ^0.8.0 || ^1.0.0",
-    "@nanostores/vue": "^0.10.0",
-    "astro": "^4.0.0 || ^5.0.0",
-    "nanostores": "^0.9.0 || ^0.10.0 || ^0.11.0",
-    "react": "^18.0.0 || ^19.0.0",
-    "vue": "^3.4.0"
-  },
-  "peerDependenciesMeta": {
-    "vue": {
-      "optional": true
-    },
-    "react": {
-      "optional": true
-    },
-    "@nanostores/vue": {
-      "optional": true
-    },
-    "@nanostores/react": {
-      "optional": true
-    }
-  },
   "devDependencies": {
-    "@nanostores/persistent": "^0.10.2",
-    "@nanostores/react": "^1.0.0",
-    "@nanostores/vue": "^0.10.0",
     "@types/node": "^22.0.0",
-    "@types/react": "^19.2.7",
-    "astro": "^5.1.1",
-    "nanostores": "^0.11.3",
-    "react": "^19.2.1",
-    "tsup": "^8.3.5",
-    "typescript": "^5.7.2",
-    "vite": "^6.0.3",
-    "vue": "^3.5.13"
+    "typescript": "^5.7.2"
   },
   "packageManager": "pnpm@10.17.1+sha512.17c560fca4867ae9473a3899ad84a88334914f379be46d455cbf92e5cf4b39d34985d452d2583baf19967fa76cb5c17bc9e245529d0b98745721aa7200ecaf7a"
 }

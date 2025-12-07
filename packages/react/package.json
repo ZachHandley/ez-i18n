@@ -1,0 +1,61 @@
+{
+  "name": "@zachhandley/ez-i18n-react",
+  "version": "0.2.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "React integration for @zachhandley/ez-i18n - Cookie-based i18n with reactive language switching",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "react",
+    "i18n",
+    "internationalization",
+    "ez-i18n",
+    "nanostores"
+  ],
+  "author": "Zach Handley <zachhandley@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/zachhandley/ez-i18n#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zachhandley/ez-i18n.git",
+    "directory": "packages/react"
+  },
+  "bugs": {
+    "url": "https://github.com/zachhandley/ez-i18n/issues"
+  },
+  "peerDependencies": {
+    "@nanostores/react": "^0.7.0 || ^0.8.0 || ^1.0.0",
+    "@zachhandley/ez-i18n": "workspace:*",
+    "nanostores": "^0.9.0 || ^0.10.0 || ^0.11.0",
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@nanostores/react": "^1.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.7",
+    "nanostores": "^0.11.3",
+    "react": "^19.2.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.0"
+  }
+}

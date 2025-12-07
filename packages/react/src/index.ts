@@ -1,6 +1,7 @@
 import { useStore } from '@nanostores/react';
-import { effectiveLocale, translations, setLocale } from './store';
-import type { TranslateFunction } from '../types';
+// Import from package path (not relative) to ensure shared store instance
+import { effectiveLocale, translations, setLocale } from '@zachhandley/ez-i18n/runtime';
+import type { TranslateFunction } from '@zachhandley/ez-i18n';
 
 /**
  * Get nested value from object using dot notation

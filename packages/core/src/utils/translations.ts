@@ -302,12 +302,52 @@ export function toRelativeImport(absolutePath: string, projectRoot: string): str
 }
 
 /**
- * Generate a glob pattern for import.meta.glob from a base directory
+ * Generate a glob pattern for import.meta.glob from a base directory.
+ * In virtual modules, globs must start with '/' (project root relative).
+ * Returns null if the path is in public/ (can't use import.meta.glob for public files).
  */
-export function toGlobPattern(baseDir: string, projectRoot: string): string {
+export function toGlobPattern(baseDir: string, projectRoot: string): string | null {
   const relativePath = path.relative(projectRoot, baseDir).replace(/\\/g, '/');
-  const normalized = relativePath.startsWith('.') ? relativePath : './' + relativePath;
-  return `${normalized}/**/*.json`;
+  // Can't use import.meta.glob for public directory files
+  if (relativePath.startsWith('public/') || relativePath === 'public') {
+    return null;
+  }
+  // Virtual modules require globs to start with '/' (project root relative)
+  return `/${relativePath}/**/*.json`;
+}
+
+/**
+ * Check if an absolute path is inside the public directory
+ */
+export function isInPublicDir(filePath: string, projectRoot: string): boolean {
+  const relativePath = path.relative(projectRoot, filePath).replace(/\\/g, '/');
+  return relativePath.startsWith('public/') || relativePath === 'public';
+}
+
+/**
+ * Convert a public directory path to its served URL.
+ * public/i18n/en/common.json → /i18n/en/common.json
+ */
+export function toPublicUrl(filePath: string, projectRoot: string): string {
+  const relativePath = path.relative(projectRoot, filePath).replace(/\\/g, '/');
+  // Remove 'public/' prefix - files in public/ are served at root
+  if (relativePath.startsWith('public/')) {
+    return '/' + relativePath.slice('public/'.length);
+  }
+  return '/' + relativePath;
+}
+
+/**
+ * Get the locale base directory for namespace calculation.
+ * For public paths, strips the 'public/' prefix.
+ */
+export function getLocaleBaseDirForNamespace(localeBaseDir: string, projectRoot: string): string {
+  const relativePath = path.relative(projectRoot, localeBaseDir).replace(/\\/g, '/');
+  // For namespace calculation, we want the path without 'public/' prefix
+  if (relativePath.startsWith('public/')) {
+    return relativePath.slice('public/'.length);
+  }
+  return relativePath;
 }
 
 /**
