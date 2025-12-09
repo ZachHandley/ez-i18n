@@ -1,6 +1,6 @@
 {
   "name": "@zachhandley/ez-i18n",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "publishConfig": {
     "access": "public"
   },
@@ -30,7 +30,7 @@
   },
   "files": [
     "dist",
-    "src",
+    "src/components",
     "README.md"
   ],
   "scripts": {

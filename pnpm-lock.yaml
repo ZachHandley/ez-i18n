@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@zachhandley/ez-i18n':
+        specifier: 0.3.4
+        version: 0.3.4(@nanostores/persistent@0.10.2(nanostores@0.11.4))(astro@5.16.4(@types/node@22.19.1)(rollup@4.53.3)(typescript@5.9.3))(nanostores@0.11.4)
     devDependencies:
       '@types/node':
         specifier: ^22.0.0
@@ -841,6 +845,13 @@ packages:
 
   '@vue/shared@3.5.25':
     resolution: {integrity: sha512-AbOPdQQnAnzs58H2FrrDxYj/TJfmeS2jdfEEhgiKINy+bnOANmVizIEgq1r+C5zsbs6l1CCQxtcj71rwNQ4jWg==}
+
+  '@zachhandley/ez-i18n@0.3.4':
+    resolution: {integrity: sha512-/qkFL4/XUI4T4NuRxCZVwMZBBw/z8CqtiBd322AcaIH98t3jtushK4EalGTigPtx4SswqUOPlylIVoZBhE7i0g==}
+    peerDependencies:
+      '@nanostores/persistent': ^0.10.0
+      astro: ^4.0.0 || ^5.0.0
+      nanostores: ^0.9.0 || ^0.10.0 || ^0.11.0
 
   acorn@8.15.0:
     resolution: {integrity: sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==}
@@ -2525,6 +2536,13 @@ snapshots:
       vue: 3.5.25(typescript@5.9.3)
 
   '@vue/shared@3.5.25': {}
+
+  '@zachhandley/ez-i18n@0.3.4(@nanostores/persistent@0.10.2(nanostores@0.11.4))(astro@5.16.4(@types/node@22.19.1)(rollup@4.53.3)(typescript@5.9.3))(nanostores@0.11.4)':
+    dependencies:
+      '@nanostores/persistent': 0.10.2(nanostores@0.11.4)
+      astro: 5.16.4(@types/node@22.19.1)(rollup@4.53.3)(typescript@5.9.3)
+      nanostores: 0.11.4
+      tinyglobby: 0.2.15
 
   acorn@8.15.0: {}
 

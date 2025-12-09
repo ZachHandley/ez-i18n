@@ -76,6 +76,75 @@ t('common.countdown', { seconds: 5 }); // "Ready in 5 seconds"
 await setLocale('es');
 ```
 
+## Virtual Modules
+
+### `ez-i18n:runtime`
+
+Core translation functions:
+
+```ts
+import { t, locale, setLocale, initLocale } from 'ez-i18n:runtime';
+
+t('key');                    // Translate a key
+t('key', { name: 'World' }); // With interpolation
+locale;                      // Reactive store with current locale
+await setLocale('es');       // Change locale (persists to cookie)
+initLocale('en', data);      // Initialize with translations
+```
+
+### `ez-i18n:config`
+
+Access your i18n configuration:
+
+```ts
+import {
+  locales,          // ['en', 'es', 'fr']
+  defaultLocale,    // 'en'
+  cookieName,       // 'ez-locale'
+  localeNames,      // { en: 'English', es: 'Español', fr: 'Français' }
+  localeToBCP47,    // { en: 'en-US', es: 'es-ES', fr: 'fr-FR' }
+  localeDirections, // { en: 'ltr', es: 'ltr', ar: 'rtl' }
+} from 'ez-i18n:config';
+```
+
+### `ez-i18n:translations`
+
+Dynamic translation loading:
+
+```ts
+import { loadTranslations, translationLoaders } from 'ez-i18n:translations';
+
+const data = await loadTranslations('es');
+```
+
+## Locale Utilities
+
+The package includes a comprehensive locale database with 100+ languages:
+
+```ts
+import {
+  LOCALE_DATABASE,
+  getLocaleInfo,
+  buildLocaleNames,
+  buildLocaleToBCP47,
+  buildLocaleDirections,
+} from '@zachhandley/ez-i18n';
+import type { LocaleInfo } from '@zachhandley/ez-i18n';
+
+// Get info for any locale
+const info = getLocaleInfo('es');
+// { name: 'Español', englishName: 'Spanish', bcp47: 'es-ES', dir: 'ltr' }
+
+// Build mappings for your supported locales
+const names = buildLocaleNames(['en', 'es', 'ar']);
+// { en: 'English', es: 'Español', ar: 'العربية' }
+
+const directions = buildLocaleDirections(['en', 'es', 'ar']);
+// { en: 'ltr', es: 'ltr', ar: 'rtl' }
+```
+
+Includes native display names, English names, BCP47 codes, and text direction (LTR/RTL) for all major languages and regional variants.
+
 ## Framework Bindings
 
 - React: `@zachhandley/ez-i18n-react`

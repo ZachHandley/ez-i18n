@@ -92,6 +92,32 @@ const name = ref('Alice');
 - **Interpolation**: Pass parameters to translations (`{ name: 'Alice' }`)
 - **Shared Store Instance**: Uses the same nanostore instance as the main package via peer dependency
 
+## Accessing Config & Locale Utilities
+
+Access configuration and locale metadata from the core package:
+
+```vue
+<template>
+  <select :value="locale" @change="setLocale(($event.target as HTMLSelectElement).value)">
+    <option v-for="loc in locales" :key="loc" :value="loc">
+      {{ localeNames[loc] }}
+    </option>
+  </select>
+</template>
+
+<script setup>
+import { useI18n } from '@zachhandley/ez-i18n-vue';
+import { locales, localeNames, localeDirections } from 'ez-i18n:config';
+import { getLocaleInfo } from '@zachhandley/ez-i18n';
+
+const { locale, setLocale } = useI18n();
+
+// Get full locale info
+const arabicInfo = getLocaleInfo('ar');
+// { name: 'العربية', englishName: 'Arabic', bcp47: 'ar-SA', dir: 'rtl' }
+</script>
+```
+
 ## API
 
 ### `ezI18nVue`

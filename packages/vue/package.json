@@ -1,6 +1,6 @@
 {
   "name": "@zachhandley/ez-i18n-vue",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "publishConfig": {
     "access": "public"
   },
@@ -16,7 +16,6 @@
   },
   "files": [
     "dist",
-    "src",
     "README.md"
   ],
   "scripts": {
