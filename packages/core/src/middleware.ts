@@ -1,4 +1,22 @@
 import { defineMiddleware } from 'astro:middleware';
+import type { TranslateFunction } from './types';
+
+/**
+ * Create a server-side translation function for the given translations object
+ */
+function createT(translations: Record<string, unknown>): TranslateFunction {
+  return (key: string, params?: Record<string, string | number>): string => {
+    const keys = key.split('.');
+    let value: unknown = translations;
+    for (const k of keys) {
+      if (value == null || typeof value !== 'object') return key;
+      value = (value as Record<string, unknown>)[k];
+    }
+    if (typeof value !== 'string') return key;
+    if (!params) return value;
+    return value.replace(/\{(\w+)\}/g, (_, p) => String(params[p] ?? `{${p}}`));
+  };
+}
 
 /**
  * Locale detection middleware for ez-i18n
@@ -47,6 +65,9 @@ export const onRequest = defineMiddleware(async ({ cookies, request, locals }, n
     // Fallback to empty translations if loader not configured
     locals.translations = {};
   }
+
+  // Create server-side translation function
+  locals.t = createT(locals.translations);
 
   // Update cookie if changed via query param
   if (langParam && langParam !== cookieValue && locales.includes(langParam)) {

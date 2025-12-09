@@ -118,6 +118,8 @@ declare global {
       locale: string;
       /** Loaded translations for the current locale */
       translations: Record<string, unknown>;
+      /** Server-side translation function */
+      t: TranslateFunction;
     }
   }
 }
