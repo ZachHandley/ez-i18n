@@ -12,6 +12,12 @@ declare module 'ez-i18n:config' {
   export const defaultLocale: string;
   /** Cookie name used to store locale preference */
   export const cookieName: string;
+  /** Display names for each locale (in native language) */
+  export const localeNames: Record<string, string>;
+  /** BCP47 language tags for each locale */
+  export const localeToBCP47: Record<string, string>;
+  /** Text direction for each locale ('ltr' or 'rtl') */
+  export const localeDirections: Record<string, 'ltr' | 'rtl'>;
 }
 
 declare module 'ez-i18n:runtime' {

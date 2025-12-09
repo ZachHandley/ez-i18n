@@ -3,6 +3,8 @@ import type { EzI18nConfig } from './types';
 import { vitePlugin, resolveConfig } from './vite-plugin';
 
 export type { EzI18nConfig, TranslateFunction } from './types';
+export { LOCALE_DATABASE, getLocaleInfo, buildLocaleNames, buildLocaleToBCP47, buildLocaleDirections } from './utils/locales';
+export type { LocaleInfo } from './utils/locales';
 
 /**
  * ez-i18n Astro integration
@@ -82,6 +84,12 @@ declare module 'ez-i18n:config' {
   export const defaultLocale: string;
   /** Cookie name used to store locale preference */
   export const cookieName: string;
+  /** Display names for each locale (in native language) */
+  export const localeNames: Record<string, string>;
+  /** BCP47 language tags for each locale */
+  export const localeToBCP47: Record<string, string>;
+  /** Text direction for each locale ('ltr' or 'rtl') */
+  export const localeDirections: Record<string, 'ltr' | 'rtl'>;
 }
 
 declare module 'ez-i18n:runtime' {

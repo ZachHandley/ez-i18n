@@ -14,6 +14,11 @@ import {
   toPublicUrl,
   getLocaleBaseDirForNamespace,
 } from './utils/translations';
+import {
+  buildLocaleNames,
+  buildLocaleToBCP47,
+  buildLocaleDirections,
+} from './utils/locales';
 import * as path from 'node:path';
 
 const VIRTUAL_CONFIG = 'ez-i18n:config';
@@ -205,10 +210,23 @@ export function vitePlugin(config: EzI18nConfig): Plugin {
     load(id) {
       // ez-i18n:config - Static config values
       if (id === RESOLVED_PREFIX + VIRTUAL_CONFIG) {
+        const localeNames = buildLocaleNames(resolved.locales);
+        const localeToBCP47 = buildLocaleToBCP47(resolved.locales);
+        const localeDirections = buildLocaleDirections(resolved.locales);
+
         return `
 export const locales = ${JSON.stringify(resolved.locales)};
 export const defaultLocale = ${JSON.stringify(resolved.defaultLocale)};
 export const cookieName = ${JSON.stringify(resolved.cookieName)};
+
+/** Display names for each locale (in native language) */
+export const localeNames = ${JSON.stringify(localeNames)};
+
+/** BCP47 language tags for each locale */
+export const localeToBCP47 = ${JSON.stringify(localeToBCP47)};
+
+/** Text direction for each locale ('ltr' or 'rtl') */
+export const localeDirections = ${JSON.stringify(localeDirections)};
 `;
       }
 
