@@ -1,6 +1,6 @@
 {
   "name": "@zachhandley/ez-i18n-react",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "publishConfig": {
     "access": "public"
   },
@@ -44,7 +44,7 @@
   },
   "peerDependencies": {
     "@nanostores/react": "^0.7.0 || ^0.8.0 || ^1.0.0",
-    "@zachhandley/ez-i18n": "workspace:*",
+    "@zachhandley/ez-i18n": ">0.3.6",
     "nanostores": "^0.9.0 || ^0.10.0 || ^0.11.0",
     "react": "^18.0.0 || ^19.0.0"
   },
