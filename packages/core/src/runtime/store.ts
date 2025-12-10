@@ -66,13 +66,22 @@ export async function setLocale(
   options: string | {
     cookieName?: string;
     loadTranslations?: TranslationLoader;
+    redirect?: boolean;
   } = {}
 ): Promise<void> {
   // Handle backwards compatibility with string cookieName
   const opts = typeof options === 'string'
     ? { cookieName: options }
     : options;
-  const { cookieName = 'ez-locale', loadTranslations } = opts;
+  const { cookieName = 'ez-locale', loadTranslations, redirect } = opts;
+
+  // If redirect mode, navigate with ?lang= param (middleware handles cookie + redirect)
+  if (redirect && typeof window !== 'undefined') {
+    const url = new URL(window.location.href);
+    url.searchParams.set('lang', locale);
+    window.location.href = url.toString();
+    return; // Page will reload, middleware sets cookie
+  }
 
   localeLoading.set(true);
 
