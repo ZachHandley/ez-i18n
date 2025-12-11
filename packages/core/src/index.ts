@@ -68,6 +68,20 @@ export default function ezI18n(config: EzI18nConfig): AstroIntegration {
 })();
 `;
         injectScript('head-inline', hydrationScript);
+
+        // View Transitions support - re-initializes i18n after Astro page swaps
+        const viewTransitionsScript = `
+import { initLocale, setTranslations } from '@zachhandley/ez-i18n/runtime';
+
+document.addEventListener('astro:after-swap', () => {
+  const initData = globalThis.__EZ_I18N_INIT__;
+  if (initData) {
+    initLocale(initData.locale, initData.translations);
+    setTranslations(initData.translations);
+  }
+});
+`;
+        injectScript('page', viewTransitionsScript);
       },
 
       'astro:config:done': ({
