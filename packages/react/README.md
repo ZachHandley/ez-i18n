@@ -33,9 +33,50 @@ function MyComponent() {
 
 Returns an object with:
 
-- `t(key: string, params?: Record<string, string | number>)` - Translation function
+- `t(key: string, params?: Record<string, string | number>)` - Translation function (reactive - component re-renders when translations change)
 - `locale: string` - Current locale
 - `setLocale(locale: string)` - Function to change locale
+
+### `useTranslation(key, params?)`
+
+A convenience hook that subscribes to a single translation key and returns the translated string. The component automatically re-renders when the locale or translation changes.
+
+```tsx
+import { useTranslation } from '@zachhandley/ez-i18n-react';
+
+function PageTitle() {
+  // Subscribes to this specific translation key
+  const title = useTranslation('page.title');
+  const greeting = useTranslation('welcome.message', { name: 'Alice' });
+
+  return (
+    <div>
+      <h1>{title}</h1>
+      <p>{greeting}</p>
+    </div>
+  );
+}
+```
+
+**Note on Reactivity:**
+
+In React, the `t()` function from `useI18n()` is already reactive - your component will automatically re-render when the locale or translations change. The `useTranslation()` hook is provided as a convenience for subscribing to individual translation keys, but both approaches are reactive.
+
+```tsx
+// Both of these are reactive and will update on locale change:
+
+// Approach 1: Using t() from useI18n
+function Component1() {
+  const { t } = useI18n();
+  return <h1>{t('welcome.title')}</h1>; // Re-renders on locale change
+}
+
+// Approach 2: Using useTranslation hook
+function Component2() {
+  const title = useTranslation('welcome.title');
+  return <h1>{title}</h1>; // Also re-renders on locale change
+}
+```
 
 ## Accessing Config & Locale Utilities
 

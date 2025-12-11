@@ -1,39 +1,18 @@
-import type { App, Plugin, ComputedRef } from 'vue';
+import type { App, Plugin, ComputedRef, Ref } from 'vue';
 import { computed } from 'vue';
 import { useStore } from '@nanostores/vue';
 // Import from package path (not relative) to ensure shared store instance
-import { effectiveLocale, translations, setLocale, initLocale, setTranslations } from '@zachhandley/ez-i18n/runtime';
+import {
+  effectiveLocale,
+  translations,
+  setLocale,
+  initLocale,
+  setTranslations,
+  getNestedValue,
+  interpolate,
+  tc as tcCore,
+} from '@zachhandley/ez-i18n/runtime';
 import type { TranslateFunction } from '@zachhandley/ez-i18n';
-
-/**
- * Get nested value from object using dot notation
- */
-function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
-  const keys = path.split('.');
-  let value: unknown = obj;
-
-  for (const key of keys) {
-    if (value == null || typeof value !== 'object') {
-      return undefined;
-    }
-    value = (value as Record<string, unknown>)[key];
-  }
-
-  return value;
-}
-
-/**
- * Interpolate params into string
- */
-function interpolate(
-  str: string,
-  params?: Record<string, string | number>
-): string {
-  if (!params) return str;
-  return str.replace(/\{(\w+)\}/g, (match, key) => {
-    return key in params ? String(params[key]) : match;
-  });
-}
 
 /**
  * Create a translation function bound to a translations object
@@ -95,19 +74,38 @@ export const ezI18nVue: Plugin = {
     // Create translate function
     const t = createTranslateFunction(transComputed);
 
+    // Create tc (translation computed) function for global properties
+    const tc: TranslateComputedFunction = (
+      key: string,
+      params?: Record<string, string | number>
+    ) => {
+      return useStore(tcCore(key, params));
+    };
+
     // Add global properties
     app.config.globalProperties.$t = t;
+    app.config.globalProperties.$tc = tc;
     app.config.globalProperties.$locale = locale;
     app.config.globalProperties.$setLocale = setLocale;
 
     // Also provide for composition API usage
     app.provide('ez-i18n', {
       t,
+      tc,
       locale,
       setLocale,
     });
   },
 };
+
+/**
+ * Type for the tc (translation computed) function
+ * Returns a Vue Ref<string> that updates when translations change
+ */
+export type TranslateComputedFunction = (
+  key: string,
+  params?: Record<string, string | number>
+) => Readonly<Ref<string>>;
 
 /**
  * Composable for using i18n in Vue components with Composition API
@@ -116,9 +114,21 @@ export const ezI18nVue: Plugin = {
  * <script setup>
  * import { useI18n } from '@zachhandley/ez-i18n/vue';
  *
- * const { t, locale, setLocale } = useI18n();
+ * const { t, tc, locale, setLocale } = useI18n();
+ *
+ * // Non-reactive (use in callbacks, computed bodies)
  * const greeting = t('welcome.greeting');
+ *
+ * // Reactive (updates when translations load or locale changes)
+ * const title = tc('welcome.title');
  * </script>
+ *
+ * @example
+ * <!-- In template, both work the same way -->
+ * <template>
+ *   <h1>{{ title }}</h1>
+ *   <p>{{ t('welcome.message') }}</p>
+ * </template>
  */
 export function useI18n() {
   const locale = useStore(effectiveLocale);
@@ -126,8 +136,23 @@ export function useI18n() {
   const transComputed = computed(() => trans.value);
   const t = createTranslateFunction(transComputed);
 
+  /**
+   * Translation computed - returns a reactive Vue Ref<string>
+   * Use this when you need translations to update reactively:
+   * - When translations may load after component mount
+   * - When locale changes should trigger re-renders
+   * - To avoid hydration mismatches in SSR
+   */
+  const tc: TranslateComputedFunction = (
+    key: string,
+    params?: Record<string, string | number>
+  ) => {
+    return useStore(tcCore(key, params));
+  };
+
   return {
     t,
+    tc,
     locale,
     setLocale,
   };
@@ -136,7 +161,10 @@ export function useI18n() {
 // Type augmentation for Vue global properties
 declare module 'vue' {
   interface ComponentCustomProperties {
+    /** Translate a key (non-reactive) */
     $t: TranslateFunction;
+    /** Translate a key and return a reactive Ref<string> */
+    $tc: TranslateComputedFunction;
     /** Current locale (reactive ref from nanostore) */
     $locale: Readonly<import('vue').Ref<string>>;
     $setLocale: typeof setLocale;
@@ -144,3 +172,6 @@ declare module 'vue' {
 }
 
 export default ezI18nVue;
+
+// Re-export core functions for convenience
+export { tc as tcCore } from '@zachhandley/ez-i18n/runtime';

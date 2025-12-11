@@ -83,10 +83,12 @@ await setLocale('es');
 Core translation functions:
 
 ```ts
-import { t, locale, setLocale, initLocale } from 'ez-i18n:runtime';
+import { t, tc, locale, setLocale, initLocale } from 'ez-i18n:runtime';
 
 t('key');                    // Translate a key
 t('key', { name: 'World' }); // With interpolation
+tc('key');                   // Returns ReadableAtom<string> for reactive subscriptions
+tc('key', { name: 'World' }); // With interpolation (reactive)
 locale;                      // Reactive store with current locale
 await setLocale('es');       // Change locale (persists to cookie)
 initLocale('en', data);      // Initialize with translations
@@ -116,6 +118,28 @@ import { loadTranslations, translationLoaders } from 'ez-i18n:translations';
 
 const data = await loadTranslations('es');
 ```
+
+## Reactive Translations with tc()
+
+The `tc()` function returns a nanostore computed atom (`ReadableAtom<string>`) that automatically updates when the locale or translation data changes. This is useful when:
+
+- Translations may load asynchronously after component mount
+- You need fine-grained reactivity for specific translation keys
+- Using with framework bindings (Vue/React) that need reactive subscriptions
+
+```ts
+import { tc } from 'ez-i18n:runtime';
+import { useStore } from '@nanostores/react'; // or @nanostores/vue
+
+// Returns a ReadableAtom that updates when locale changes
+const title = tc('welcome.title');
+const greeting = tc('welcome.message', { name: 'Alice' });
+
+// In React/Vue, use with framework-specific store hooks
+const titleValue = useStore(title); // Automatically re-renders on locale change
+```
+
+For most use cases, the regular `t()` function is sufficient. Use `tc()` when you need explicit reactive subscriptions in your framework code.
 
 ## Locale Utilities
 

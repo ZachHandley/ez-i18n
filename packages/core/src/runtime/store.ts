@@ -1,5 +1,41 @@
-import { atom, computed } from 'nanostores';
+import { atom, computed, type ReadableAtom } from 'nanostores';
 import { persistentAtom } from '@nanostores/persistent';
+
+// ============================================================================
+// Utility Functions (shared across all framework packages)
+// ============================================================================
+
+/**
+ * Get nested value from object using dot notation
+ * @example getNestedValue({ a: { b: 'hello' } }, 'a.b') // 'hello'
+ */
+export function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+  const keys = path.split('.');
+  let value: unknown = obj;
+
+  for (const key of keys) {
+    if (value == null || typeof value !== 'object') {
+      return undefined;
+    }
+    value = (value as Record<string, unknown>)[key];
+  }
+
+  return value;
+}
+
+/**
+ * Interpolate params into string using {placeholder} syntax
+ * @example interpolate('Hello {name}!', { name: 'World' }) // 'Hello World!'
+ */
+export function interpolate(
+  str: string,
+  params?: Record<string, string | number>
+): string {
+  if (!params) return str;
+  return str.replace(/\{(\w+)\}/g, (match, key) => {
+    return key in params ? String(params[key]) : match;
+  });
+}
 
 /**
  * Server-provided locale (set during SSR/hydration)
@@ -128,4 +164,67 @@ export function getLocale(): string {
  */
 export function getTranslations(): Record<string, unknown> {
   return translations.get();
+}
+
+// ============================================================================
+// Translation Functions
+// ============================================================================
+
+/**
+ * Translate a key to its value (non-reactive, imperative)
+ * Use this in event handlers, callbacks, or non-reactive contexts.
+ *
+ * @example
+ * const message = t('welcome.title');
+ * const greeting = t('welcome.hello', { name: 'World' });
+ */
+export function t(key: string, params?: Record<string, string | number>): string {
+  const trans = translations.get();
+  const value = getNestedValue(trans, key);
+
+  if (typeof value !== 'string') {
+    if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+      console.warn('[ez-i18n] Missing translation:', key);
+    }
+    return key;
+  }
+
+  return interpolate(value, params);
+}
+
+/**
+ * Create a reactive translation computed (nanostore computed atom)
+ * Returns a ReadableAtom<string> that updates when translations change.
+ *
+ * Use this when you need a reactive translation that updates automatically:
+ * - In Vue/React components where translations may load after initial render
+ * - When locale changes should trigger re-renders
+ * - To avoid hydration mismatches in SSR
+ *
+ * @example
+ * // Static key
+ * const $title = tc('welcome.title');
+ *
+ * // In Vue (with @nanostores/vue)
+ * const title = useStore(tc('welcome.title'));
+ *
+ * // In React (with @nanostores/react)
+ * const title = useStore(tc('welcome.title'));
+ */
+export function tc(
+  key: string,
+  params?: Record<string, string | number>
+): ReadableAtom<string> {
+  return computed(translations, (trans) => {
+    const value = getNestedValue(trans, key);
+
+    if (typeof value !== 'string') {
+      if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+        console.warn('[ez-i18n] Missing translation:', key);
+      }
+      return key;
+    }
+
+    return interpolate(value, params);
+  });
 }

@@ -67,6 +67,9 @@ Use the `useI18n` composable:
     <h1>{{ t('welcome.title') }}</h1>
     <p>{{ t('welcome.message', { name }) }}</p>
 
+    <!-- Using tc() for reactive translations -->
+    <h2>{{ greeting }}</h2>
+
     <div>
       <span>Current locale: {{ locale }}</span>
       <button @click="setLocale('en')">English</button>
@@ -79,8 +82,11 @@ Use the `useI18n` composable:
 import { ref } from 'vue';
 import { useI18n } from '@zachhandley/ez-i18n-vue';
 
-const { t, locale, setLocale } = useI18n();
+const { t, tc, locale, setLocale } = useI18n();
 const name = ref('Alice');
+
+// tc() returns a Vue Ref that automatically updates on locale change
+const greeting = tc('common.greeting', { name: 'World' });
 </script>
 ```
 
@@ -135,8 +141,56 @@ Composable for Composition API usage.
 
 **Returns:**
 - `t(key, params?)`: Translate function
+- `tc(key, params?)`: Returns a Vue `Ref<string>` that automatically updates when locale changes
 - `locale`: Current locale (reactive ref)
 - `setLocale(locale)`: Change locale function
+
+### Reactive Translations with tc()
+
+The `tc()` function returns a Vue `Ref<string>` (wrapping a nanostore computed atom) that automatically updates when the locale or translations change. This is useful when:
+
+- Translations may load asynchronously after component mount
+- You want a dedicated reactive reference for a specific translation
+- You need to pass a reactive translation to a child component
+
+```vue
+<script setup>
+import { useI18n } from '@zachhandley/ez-i18n-vue';
+
+const { tc } = useI18n();
+
+// Returns a Ref that updates when locale changes
+const title = tc('welcome.title');
+const greeting = tc('welcome.message', { name: 'Alice' });
+</script>
+
+<template>
+  <h1>{{ title }}</h1>
+  <p>{{ greeting }}</p>
+</template>
+```
+
+The `tc()` function is also available as a global property `$tc` in the Options API:
+
+```vue
+<template>
+  <div>
+    <h1>{{ pageTitle }}</h1>
+  </div>
+</template>
+
+<script>
+export default {
+  computed: {
+    pageTitle() {
+      return this.$tc('page.title');
+    }
+  }
+};
+</script>
+```
+
+For most use cases, the regular `t()` function is sufficient. Use `tc()` when you need explicit reactive references.
 
 ## License
 

@@ -27,11 +27,23 @@ declare module 'ez-i18n:runtime' {
   export const locale: ReadableAtom<string>;
 
   /**
-   * Translate a key to the current locale
+   * Translate a key to the current locale (non-reactive)
    * @param key - Dot-notation key (e.g., 'common.welcome')
    * @param params - Optional interpolation params for {placeholder} syntax
    */
   export function t(key: string, params?: Record<string, string | number>): string;
+
+  /**
+   * Create a reactive translation computed (nanostore computed atom)
+   * Returns a ReadableAtom<string> that updates when translations change.
+   *
+   * @param key - Static translation key (dot-notation)
+   * @param params - Optional interpolation params for {placeholder} syntax
+   */
+  export function tc(
+    key: string,
+    params?: Record<string, string | number>
+  ): ReadableAtom<string>;
 
   /**
    * Set the current locale and persist to cookie/localStorage

@@ -233,6 +233,7 @@ export const localeDirections = ${JSON.stringify(localeDirections)};
       // ez-i18n:runtime - Runtime exports for Astro files
       if (id === RESOLVED_PREFIX + VIRTUAL_RUNTIME) {
         return `
+import { computed } from 'nanostores';
 import { effectiveLocale, translations, setLocale, initLocale } from '@zachhandley/ez-i18n/runtime';
 
 export { setLocale, initLocale };
@@ -262,7 +263,7 @@ function interpolate(str, params) {
 }
 
 /**
- * Translate a key to the current locale
+ * Translate a key to the current locale (non-reactive)
  * @param key - Dot-notation key (e.g., 'common.welcome')
  * @param params - Optional interpolation params
  */
@@ -278,6 +279,26 @@ export function t(key, params) {
   }
 
   return interpolate(value, params);
+}
+
+/**
+ * Create a reactive translation computed (nanostore computed atom)
+ * @param key - Dot-notation key (e.g., 'common.welcome')
+ * @param params - Optional interpolation params
+ */
+export function tc(key, params) {
+  return computed(translations, (trans) => {
+    const value = getNestedValue(trans, key);
+
+    if (typeof value !== 'string') {
+      if (import.meta.env.DEV) {
+        console.warn('[ez-i18n] Missing translation:', key);
+      }
+      return key;
+    }
+
+    return interpolate(value, params);
+  });
 }
 `;
       }
