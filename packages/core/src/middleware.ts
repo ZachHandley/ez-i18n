@@ -78,11 +78,12 @@ export const onRequest = defineMiddleware(async ({ cookies, request, locals, red
     const { loadTranslations } = await import('ez-i18n:translations');
     locals.translations = await loadTranslations(locale);
 
-    // Initialize nanostores for Vue/React SSR
-    // This ensures useI18n() can read translations during server-side rendering
-    const { initLocale, setTranslations } = await import('./runtime/store');
-    initLocale(locale, locals.translations);
-    setTranslations(locals.translations);
+    // Set global SSR context for cross-bundle access
+    // This ensures Vue/React can read translations even if nanostores are in different bundles
+    (globalThis as any).__EZ_I18N_SSR__ = {
+      locale,
+      translations: locals.translations,
+    };
   } catch {
     // Fallback to empty translations if loader not configured
     locals.translations = {};

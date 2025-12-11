@@ -49,7 +49,16 @@ export function useI18n() {
     key: string,
     params?: Record<string, string | number>
   ): string => {
-    const value = getNestedValue(trans, key);
+    // SSR fallback: if store is empty, check global context set by middleware
+    let effectiveTrans = trans;
+    if (Object.keys(trans).length === 0) {
+      const ssrTrans = (globalThis as any).__EZ_I18N_SSR__?.translations;
+      if (ssrTrans) {
+        effectiveTrans = ssrTrans;
+      }
+    }
+
+    const value = getNestedValue(effectiveTrans, key);
 
     if (typeof value !== 'string') {
       if (import.meta.env?.DEV) {

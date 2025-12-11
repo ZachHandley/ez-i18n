@@ -171,6 +171,22 @@ export function getTranslations(): Record<string, unknown> {
 // ============================================================================
 
 /**
+ * Get translations, checking SSR global context as fallback
+ * This handles cross-bundle SSR where middleware and Vue have different store instances
+ */
+function getTranslationsWithSSRFallback(): Record<string, unknown> {
+  const trans = translations.get();
+  // If store is empty, check SSR global context (set by middleware)
+  if (Object.keys(trans).length === 0) {
+    const ssrTrans = (globalThis as any).__EZ_I18N_SSR__?.translations;
+    if (ssrTrans) {
+      return ssrTrans;
+    }
+  }
+  return trans;
+}
+
+/**
  * Translate a key to its value (non-reactive, imperative)
  * Use this in event handlers, callbacks, or non-reactive contexts.
  *
@@ -179,7 +195,7 @@ export function getTranslations(): Record<string, unknown> {
  * const greeting = t('welcome.hello', { name: 'World' });
  */
 export function t(key: string, params?: Record<string, string | number>): string {
-  const trans = translations.get();
+  const trans = getTranslationsWithSSRFallback();
   const value = getNestedValue(trans, key);
 
   if (typeof value !== 'string') {
@@ -216,7 +232,11 @@ export function tc(
   params?: Record<string, string | number>
 ): ReadableAtom<string> {
   return computed(translations, (trans) => {
-    const value = getNestedValue(trans, key);
+    // Use SSR fallback if store is empty
+    const effectiveTrans = Object.keys(trans).length === 0
+      ? ((globalThis as any).__EZ_I18N_SSR__?.translations ?? trans)
+      : trans;
+    const value = getNestedValue(effectiveTrans, key);
 
     if (typeof value !== 'string') {
       if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {

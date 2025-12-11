@@ -21,7 +21,16 @@ function createTranslateFunction(
   translationsRef: ComputedRef<Record<string, unknown>>
 ): TranslateFunction {
   return (key: string, params?: Record<string, string | number>): string => {
-    const trans = translationsRef.value;
+    let trans = translationsRef.value;
+
+    // SSR fallback: if store is empty, check global context set by middleware
+    if (Object.keys(trans).length === 0) {
+      const ssrTrans = (globalThis as any).__EZ_I18N_SSR__?.translations;
+      if (ssrTrans) {
+        trans = ssrTrans;
+      }
+    }
+
     const value = getNestedValue(trans, key);
 
     if (typeof value !== 'string') {
