@@ -73,13 +73,14 @@ export const onRequest = defineMiddleware(async ({ cookies, request, locals, red
   // Set locale on locals for use in pages
   locals.locale = locale;
 
+  // Expose Cloudflare ASSETS binding for translation loader (if available)
+  const runtime = (locals as any).runtime;
+  if (runtime?.env?.ASSETS) {
+    (globalThis as any).__EZ_I18N_ASSETS__ = runtime.env.ASSETS;
+  }
+
   // Load translations for the current locale
   try {
-    // Set origin for edge runtime fetch (fallback if SITE config not set)
-    if (!import.meta.env.SITE && !(globalThis as any).__EZ_I18N_ORIGIN__) {
-      (globalThis as any).__EZ_I18N_ORIGIN__ = url.origin;
-    }
-
     const { loadTranslations } = await import('ez-i18n:translations');
     locals.translations = await loadTranslations(locale);
 

@@ -306,13 +306,10 @@ export function toRelativeImport(absolutePath: string, projectRoot: string): str
  * In virtual modules, globs must start with '/' (project root relative).
  * Returns null if the path is in public/ (can't use import.meta.glob for public files).
  */
-export function toGlobPattern(baseDir: string, projectRoot: string): string | null {
+export function toGlobPattern(baseDir: string, projectRoot: string): string {
   const relativePath = path.relative(projectRoot, baseDir).replace(/\\/g, '/');
-  // Can't use import.meta.glob for public directory files
-  if (relativePath.startsWith('public/') || relativePath === 'public') {
-    return null;
-  }
   // Virtual modules require globs to start with '/' (project root relative)
+  // Works for both public/ and non-public directories
   return `/${relativePath}/**/*.json`;
 }
 

@@ -707,30 +707,32 @@ function __deepMerge(target, ...sources) {
 
 /**
  * Inline public JSON loader for the virtual module.
- * Uses fetch with origin in serverless/edge, fs.readFileSync in Node.js SSR.
+ * Runtime-aware: detects environment and uses appropriate file loading strategy.
  */
 function getPublicLoaderCode(): string {
   return `
 async function __loadPublicJson(url, absolutePath) {
-  // Browser - use fetch with relative URL
-  if (typeof window !== 'undefined') {
+  // Browser - fetch with relative URL
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     return fetch(url).then(r => r.json());
   }
 
-  // Get origin from Astro site config or middleware-set value
-  const origin = import.meta.env.SITE?.replace(/\\/$/, '') ||
-                 globalThis.__EZ_I18N_ORIGIN__ ||
-                 '';
-
-  // If we have an origin, use fetch (works in CF Workers, Vercel Edge, etc.)
-  if (origin) {
-    return fetch(origin + url).then(r => r.json());
+  // Cloudflare Workers - use ASSETS binding (set by middleware)
+  const assets = globalThis.__EZ_I18N_ASSETS__;
+  if (assets && typeof assets.fetch === 'function') {
+    const response = await assets.fetch(new URL(url, 'https://assets.local'));
+    return response.json();
   }
 
-  // No origin - try filesystem (traditional Node.js SSR)
+  // Deno - use Deno.readTextFile
+  if (typeof Deno !== 'undefined') {
+    const content = await Deno.readTextFile(absolutePath);
+    return JSON.parse(content);
+  }
+
+  // Node.js / Bun - use absolute path with node:fs
   const { readFileSync } = await import('node:fs');
-  const content = readFileSync(absolutePath, 'utf-8');
-  return JSON.parse(content);
+  return JSON.parse(readFileSync(absolutePath, 'utf-8'));
 }`;
 }
 
