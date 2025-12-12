@@ -75,6 +75,11 @@ export const onRequest = defineMiddleware(async ({ cookies, request, locals, red
 
   // Load translations for the current locale
   try {
+    // Set origin for edge runtime fetch (fallback if SITE config not set)
+    if (!import.meta.env.SITE && !(globalThis as any).__EZ_I18N_ORIGIN__) {
+      (globalThis as any).__EZ_I18N_ORIGIN__ = url.origin;
+    }
+
     const { loadTranslations } = await import('ez-i18n:translations');
     locals.translations = await loadTranslations(locale);
 

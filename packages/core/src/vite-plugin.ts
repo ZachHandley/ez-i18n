@@ -710,7 +710,7 @@ function __deepMerge(target, ...sources) {
 function getPublicLoaderCode(): string {
   return `
 async function __loadPublicJson(url, absolutePath) {
-  // Browser environment - use fetch
+  // Browser environment - use fetch with relative URL
   if (typeof window !== 'undefined') {
     return fetch(url).then(r => r.json());
   }
@@ -723,8 +723,13 @@ async function __loadPublicJson(url, absolutePath) {
                         !globalThis.process?.versions?.node;              // No Node.js process
 
   if (isEdgeRuntime) {
-    // Edge runtime - use fetch (relative URLs work in request context)
-    return fetch(url).then(r => r.json());
+    // Edge runtime - need absolute URL for fetch
+    // Priority: Astro site config > middleware-set origin > relative (hope for the best)
+    const origin = import.meta.env.SITE?.replace(/\\/$/, '') ||
+                   globalThis.__EZ_I18N_ORIGIN__ ||
+                   '';
+    const fetchUrl = origin ? origin + url : url;
+    return fetch(fetchUrl).then(r => r.json());
   }
 
   // Traditional Node.js SSR - read from filesystem
