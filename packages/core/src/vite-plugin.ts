@@ -707,36 +707,29 @@ function __deepMerge(target, ...sources) {
 
 /**
  * Inline public JSON loader for the virtual module.
- * Uses fetch in browser and edge runtimes, fs.readFileSync only in Node.js SSR.
+ * Uses fetch with origin in serverless/edge, fs.readFileSync in Node.js SSR.
  */
 function getPublicLoaderCode(): string {
   return `
 async function __loadPublicJson(url, absolutePath) {
-  // Browser environment - use fetch with relative URL
+  // Browser - use fetch with relative URL
   if (typeof window !== 'undefined') {
     return fetch(url).then(r => r.json());
   }
 
-  // Edge runtime detection (Cloudflare Workers, Vercel Edge, Deno, etc.)
-  // These environments have fetch but no filesystem access
-  const isEdgeRuntime = typeof globalThis.caches !== 'undefined' ||       // CF Workers / Service Workers
-                        typeof globalThis.EdgeRuntime !== 'undefined' ||  // Vercel Edge
-                        typeof Deno !== 'undefined' ||                    // Deno
-                        !globalThis.process?.versions?.node;              // No Node.js process
+  // Get origin from Astro site config or middleware-set value
+  const origin = import.meta.env.SITE?.replace(/\\/$/, '') ||
+                 globalThis.__EZ_I18N_ORIGIN__ ||
+                 '';
 
-  if (isEdgeRuntime) {
-    // Edge runtime - need absolute URL for fetch
-    // Priority: Astro site config > middleware-set origin > relative (hope for the best)
-    const origin = import.meta.env.SITE?.replace(/\\/$/, '') ||
-                   globalThis.__EZ_I18N_ORIGIN__ ||
-                   '';
-    const fetchUrl = origin ? origin + url : url;
-    return fetch(fetchUrl).then(r => r.json());
+  // If we have an origin, use fetch (works in CF Workers, Vercel Edge, etc.)
+  if (origin) {
+    return fetch(origin + url).then(r => r.json());
   }
 
-  // Traditional Node.js SSR - read from filesystem
-  const fs = await import('node:fs');
-  const content = fs.readFileSync(absolutePath, 'utf-8');
+  // No origin - try filesystem (traditional Node.js SSR)
+  const { readFileSync } = await import('node:fs');
+  const content = readFileSync(absolutePath, 'utf-8');
   return JSON.parse(content);
 }`;
 }
