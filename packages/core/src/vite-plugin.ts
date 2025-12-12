@@ -705,20 +705,32 @@ function __deepMerge(target, ...sources) {
 
 /**
  * Inline public JSON loader for the virtual module.
- * Uses fetch in browser, fs.readFileSync in SSR/Node.
+ * Uses fetch in browser and edge runtimes, fs.readFileSync only in Node.js SSR.
  */
 function getPublicLoaderCode(): string {
   return `
 async function __loadPublicJson(url, absolutePath) {
+  // Browser environment - use fetch
   if (typeof window !== 'undefined') {
-    // Browser - use fetch with relative URL
     return fetch(url).then(r => r.json());
-  } else {
-    // SSR/Node - read from filesystem
-    const fs = await import('node:fs');
-    const content = fs.readFileSync(absolutePath, 'utf-8');
-    return JSON.parse(content);
   }
+
+  // Edge runtime detection (Cloudflare Workers, Vercel Edge, Deno, etc.)
+  // These environments have fetch but no filesystem access
+  const isEdgeRuntime = typeof globalThis.caches !== 'undefined' ||       // CF Workers / Service Workers
+                        typeof globalThis.EdgeRuntime !== 'undefined' ||  // Vercel Edge
+                        typeof Deno !== 'undefined' ||                    // Deno
+                        !globalThis.process?.versions?.node;              // No Node.js process
+
+  if (isEdgeRuntime) {
+    // Edge runtime - use fetch (relative URLs work in request context)
+    return fetch(url).then(r => r.json());
+  }
+
+  // Traditional Node.js SSR - read from filesystem
+  const fs = await import('node:fs');
+  const content = fs.readFileSync(absolutePath, 'utf-8');
+  return JSON.parse(content);
 }`;
 }
 
