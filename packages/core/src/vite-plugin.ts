@@ -92,10 +92,12 @@ export function vitePlugin(config: EzI18nConfig): Plugin {
 
           // Populate translationInfo from cache
           for (const [locale, files] of Object.entries(cache.discovered)) {
+            const filesInPublic = files.length > 0 && isInPublicDir(files[0], projectRoot);
             translationInfo.set(locale, {
               locale,
               files,
               localeBaseDir: localeBaseDirs[locale],
+              isPublic: filesInPublic,
             });
           }
         }
