@@ -1,5 +1,6 @@
 import { atom, computed, type ReadableAtom } from 'nanostores';
 import { persistentAtom } from '@nanostores/persistent';
+import '../types'; // Import to bring in global type declarations
 
 // ============================================================================
 // Utility Functions (shared across all framework packages)

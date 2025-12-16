@@ -131,4 +131,6 @@ declare global {
 
   // eslint-disable-next-line no-var
   var __EZ_I18N__: EzI18nContext | undefined;
+  // eslint-disable-next-line no-var
+  var __EZ_I18N_ASSETS__: { fetch: (req: Request | URL | string) => Promise<Response> } | undefined;
 }
