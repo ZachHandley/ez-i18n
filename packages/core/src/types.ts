@@ -111,6 +111,12 @@ export type TranslateFunction = (key: string, params?: Record<string, string | n
 /**
  * Augment Astro's locals type
  */
+// Global context for cross-bundle i18n data sharing
+export interface EzI18nContext {
+  locale: string;
+  translations: Record<string, unknown>;
+}
+
 declare global {
   namespace App {
     interface Locals {
@@ -122,4 +128,7 @@ declare global {
       t: TranslateFunction;
     }
   }
+
+  // eslint-disable-next-line no-var
+  var __EZ_I18N__: EzI18nContext | undefined;
 }

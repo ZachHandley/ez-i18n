@@ -74,7 +74,7 @@ export default function ezI18n(config: EzI18nConfig): AstroIntegration {
 import { initLocale, setTranslations } from '@zachhandley/ez-i18n/runtime';
 
 document.addEventListener('astro:after-swap', () => {
-  const initData = globalThis.__EZ_I18N_INIT__;
+  const initData = globalThis.__EZ_I18N__;
   if (initData) {
     initLocale(initData.locale, initData.translations);
     setTranslations(initData.translations);

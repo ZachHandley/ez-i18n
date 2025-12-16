@@ -23,9 +23,9 @@ function createTranslateFunction(
   return (key: string, params?: Record<string, string | number>): string => {
     let trans = translationsRef.value;
 
-    // SSR fallback: if store is empty, check global context set by middleware
+    // Fallback: if store is empty, check global context set by middleware/EzI18nHead
     if (Object.keys(trans).length === 0) {
-      const ssrTrans = (globalThis as any).__EZ_I18N_SSR__?.translations;
+      const ssrTrans = globalThis.__EZ_I18N__?.translations;
       if (ssrTrans) {
         trans = ssrTrans;
       }
@@ -67,10 +67,9 @@ export const ezI18nVue: Plugin = {
   install(app: App) {
     // Check if stores need initialization from global data
     // This handles cases where Vue bundles separately from EzI18nHead
-    const g = globalThis as any;
-    if (g.__EZ_I18N_INIT__) {
-      initLocale(g.__EZ_I18N_INIT__.locale, g.__EZ_I18N_INIT__.translations);
-      setTranslations(g.__EZ_I18N_INIT__.translations);
+    if (globalThis.__EZ_I18N__) {
+      initLocale(globalThis.__EZ_I18N__.locale, globalThis.__EZ_I18N__.translations);
+      setTranslations(globalThis.__EZ_I18N__.translations);
     }
 
     // Get reactive store values

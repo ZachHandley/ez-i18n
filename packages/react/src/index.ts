@@ -13,10 +13,9 @@ import {
 import type { TranslateFunction } from '@zachhandley/ez-i18n';
 
 // Initialize stores from global data if available (handles separate Vite bundles)
-const g = globalThis as any;
-if (g.__EZ_I18N_INIT__) {
-  initLocale(g.__EZ_I18N_INIT__.locale, g.__EZ_I18N_INIT__.translations);
-  setTranslations(g.__EZ_I18N_INIT__.translations);
+if (globalThis.__EZ_I18N__) {
+  initLocale(globalThis.__EZ_I18N__.locale, globalThis.__EZ_I18N__.translations);
+  setTranslations(globalThis.__EZ_I18N__.translations);
 }
 
 /**
@@ -49,10 +48,10 @@ export function useI18n() {
     key: string,
     params?: Record<string, string | number>
   ): string => {
-    // SSR fallback: if store is empty, check global context set by middleware
+    // Fallback: if store is empty, check global context set by middleware/EzI18nHead
     let effectiveTrans = trans;
     if (Object.keys(trans).length === 0) {
-      const ssrTrans = (globalThis as any).__EZ_I18N_SSR__?.translations;
+      const ssrTrans = globalThis.__EZ_I18N__?.translations;
       if (ssrTrans) {
         effectiveTrans = ssrTrans;
       }

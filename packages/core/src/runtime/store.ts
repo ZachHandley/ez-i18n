@@ -176,9 +176,9 @@ export function getTranslations(): Record<string, unknown> {
  */
 function getTranslationsWithSSRFallback(): Record<string, unknown> {
   const trans = translations.get();
-  // If store is empty, check SSR global context (set by middleware)
+  // If store is empty, check global context (set by middleware/EzI18nHead)
   if (Object.keys(trans).length === 0) {
-    const ssrTrans = (globalThis as any).__EZ_I18N_SSR__?.translations;
+    const ssrTrans = globalThis.__EZ_I18N__?.translations;
     if (ssrTrans) {
       return ssrTrans;
     }
@@ -232,9 +232,9 @@ export function tc(
   params?: Record<string, string | number>
 ): ReadableAtom<string> {
   return computed(translations, (trans) => {
-    // Use SSR fallback if store is empty
+    // Use global fallback if store is empty
     const effectiveTrans = Object.keys(trans).length === 0
-      ? ((globalThis as any).__EZ_I18N_SSR__?.translations ?? trans)
+      ? (globalThis.__EZ_I18N__?.translations ?? trans)
       : trans;
     const value = getNestedValue(effectiveTrans, key);
 
