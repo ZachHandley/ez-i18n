@@ -104,16 +104,22 @@ export async function setLocale(
     cookieName?: string;
     loadTranslations?: TranslationLoader;
     redirect?: boolean;
+    /** Async callback to run before redirect (e.g., save preferences to backend) */
+    beforeRedirect?: (locale: string) => Promise<void>;
   } = {}
 ): Promise<void> {
   // Handle backwards compatibility with string cookieName
   const opts = typeof options === 'string'
     ? { cookieName: options }
     : options;
-  const { cookieName = 'ez-locale', loadTranslations, redirect } = opts;
+  const { cookieName = 'ez-locale', loadTranslations, redirect, beforeRedirect } = opts;
 
   // If redirect mode, navigate with ?lang= param (middleware handles cookie + redirect)
   if (redirect && typeof window !== 'undefined') {
+    // Run beforeRedirect callback if provided (e.g., save preferences to backend)
+    if (beforeRedirect) {
+      await beforeRedirect(locale);
+    }
     const url = new URL(window.location.href);
     url.searchParams.set('lang', locale);
     window.location.href = url.toString();
