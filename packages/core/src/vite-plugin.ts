@@ -341,45 +341,102 @@ export function tc(key, params) {
     },
 
     configureServer(server: ViteDevServer) {
-      // Watch translation directories for new/deleted files
-      const watchedDirs = new Set<string>();
+      // Map of watched directory -> locale (for determining which locale a new file belongs to)
+      const watchedDirToLocale = new Map<string, string>();
 
       if (config.translations) {
         if (typeof config.translations === 'string') {
-          // Base directory
-          watchedDirs.add(path.resolve(viteConfig.root, config.translations));
+          // Base directory with auto-discovery - watch each locale's subdirectory
+          const baseDir = path.resolve(viteConfig.root, config.translations.replace(/\/$/, ''));
+          for (const locale of translationInfo.keys()) {
+            const localeDir = path.join(baseDir, locale);
+            watchedDirToLocale.set(localeDir, locale);
+          }
         } else {
-          // Per-locale config
-          for (const localePath of Object.values(config.translations)) {
+          // Per-locale config - watch each locale's configured path
+          for (const [locale, localePath] of Object.entries(config.translations)) {
             if (typeof localePath === 'string') {
               const pathType = detectPathType(localePath);
               if (pathType === 'folder') {
-                watchedDirs.add(path.resolve(viteConfig.root, localePath));
+                watchedDirToLocale.set(path.resolve(viteConfig.root, localePath.replace(/\/$/, '')), locale);
               } else if (pathType === 'glob') {
-                // Extract base directory from glob
                 const baseDir = localePath.split('*')[0].replace(/\/$/, '');
                 if (baseDir) {
-                  watchedDirs.add(path.resolve(viteConfig.root, baseDir));
+                  watchedDirToLocale.set(path.resolve(viteConfig.root, baseDir), locale);
                 }
               }
             } else if (Array.isArray(localePath)) {
-              // Array of files - watch parent directories
               for (const file of localePath) {
                 const dir = path.dirname(path.resolve(viteConfig.root, file));
-                watchedDirs.add(dir);
+                watchedDirToLocale.set(dir, locale);
               }
             }
           }
         }
       } else {
-        // Default directory
-        watchedDirs.add(path.resolve(viteConfig.root, './public/i18n'));
+        // Default directory - watch each locale's subdirectory
+        const baseDir = path.resolve(viteConfig.root, './public/i18n');
+        for (const locale of translationInfo.keys()) {
+          const localeDir = path.join(baseDir, locale);
+          watchedDirToLocale.set(localeDir, locale);
+        }
       }
 
       // Add directories to watcher
-      for (const dir of watchedDirs) {
+      for (const dir of watchedDirToLocale.keys()) {
         server.watcher.add(dir);
       }
+
+      // Handle new translation files
+      server.watcher.on('add', (file) => {
+        if (!file.endsWith('.json')) return;
+
+        // Find which locale this file belongs to by checking watched directories
+        let locale: string | undefined;
+        for (const [dir, loc] of watchedDirToLocale) {
+          if (file.startsWith(dir + path.sep) || file.startsWith(dir + '/')) {
+            locale = loc;
+            break;
+          }
+        }
+
+        if (!locale || !translationInfo.has(locale)) return;
+
+        // Add file to translationInfo
+        const info = translationInfo.get(locale)!;
+        if (!info.files.includes(file)) {
+          info.files.push(file);
+          info.files.sort((a, b) => a.localeCompare(b));
+        }
+
+        // Invalidate and reload
+        const mod = server.moduleGraph.getModuleById(RESOLVED_PREFIX + VIRTUAL_TRANSLATIONS);
+        if (mod) {
+          server.moduleGraph.invalidateModule(mod);
+          server.ws.send({ type: 'full-reload', path: '*' });
+        }
+      });
+
+      // Handle deleted translation files
+      server.watcher.on('unlink', (file) => {
+        if (!file.endsWith('.json')) return;
+
+        // Find and remove from translationInfo
+        for (const info of translationInfo.values()) {
+          const index = info.files.indexOf(file);
+          if (index !== -1) {
+            info.files.splice(index, 1);
+
+            // Invalidate and reload
+            const mod = server.moduleGraph.getModuleById(RESOLVED_PREFIX + VIRTUAL_TRANSLATIONS);
+            if (mod) {
+              server.moduleGraph.invalidateModule(mod);
+              server.ws.send({ type: 'full-reload', path: '*' });
+            }
+            break;
+          }
+        }
+      });
     },
   };
 }
