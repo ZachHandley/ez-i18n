@@ -5,7 +5,7 @@ Cookie-based i18n for Astro. Ships the Astro integration plus the shared runtime
 ## Installation
 
 ```bash
-pnpm add @zachhandley/ez-i18n nanostores @nanostores/persistent
+pnpm add @zachhandley/ez-i18n nanostores
 ```
 
 ## Astro Setup

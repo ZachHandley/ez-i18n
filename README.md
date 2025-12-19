@@ -6,7 +6,7 @@ Cookie-based i18n for Astro + Vue + React. No URL prefixes, reactive language sw
 
 ```bash
 # Core package (required) - includes Astro integration + runtime
-pnpm add @zachhandley/ez-i18n nanostores @nanostores/persistent
+pnpm add @zachhandley/ez-i18n nanostores
 
 # For Vue projects
 pnpm add @zachhandley/ez-i18n-vue @nanostores/vue

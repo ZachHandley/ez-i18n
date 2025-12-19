@@ -1,5 +1,4 @@
 import { atom, computed, type ReadableAtom } from 'nanostores';
-import { persistentAtom } from '@nanostores/persistent';
 import '../types'; // Import to bring in global type declarations
 
 // ============================================================================
@@ -45,12 +44,11 @@ export function interpolate(
 const serverLocale = atom<string | null>(null);
 
 /**
- * Client-side locale preference (persisted to localStorage)
+ * Client-side locale preference
+ * Note: Persistence is handled via cookies (set by middleware) and the hydration script
+ * that syncs localStorage. We use a regular atom to avoid proxy issues in Cloudflare Workers.
  */
-export const localePreference = persistentAtom<string>('ez-locale', 'en', {
-  encode: (value) => value,
-  decode: (value) => value,
-});
+export const localePreference = atom<string>('en');
 
 /**
  * Effective locale - uses server locale if set, otherwise client preference

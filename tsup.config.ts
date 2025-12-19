@@ -20,7 +20,6 @@ export default defineConfig([
       'vue',
       'react',
       'nanostores',
-      '@nanostores/persistent',
       '@nanostores/vue',
       '@nanostores/react',
       /^ez-i18n/,

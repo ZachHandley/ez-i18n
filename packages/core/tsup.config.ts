@@ -16,7 +16,6 @@ export default defineConfig([
       'astro',
       'astro:middleware',
       'nanostores',
-      '@nanostores/persistent',
       /^@zachhandley\/ez-i18n/,
     ],
   },
