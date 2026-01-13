@@ -16,6 +16,7 @@ on:
           - core
           - react
           - vue
+          - packages
         required: false
       version:
         description: Version to publish (e.g., 0.4.0)
