@@ -76,7 +76,11 @@ jobs:
           fi
       - name: Update package version from tag
         run: |
-          node -e "const fs=require('fs');const path=require('path');const pkgPath=path.join(process.env.PACKAGE_FILTER,'package.json');const pkg=JSON.parse(fs.readFileSync(pkgPath,'utf8'));pkg.version=process.env.TARGET_VERSION;if (process.env.REQUIRE_CORE_VERSION==='true' && pkg.peerDependencies && pkg.peerDependencies['@zachhandley/ez-i18n']) {pkg.peerDependencies['@zachhandley/ez-i18n']=`>=${process.env.TARGET_VERSION}`;}fs.writeFileSync(pkgPath,JSON.stringify(pkg,null,2)+'\n');"
+          EXTRA_ARGS=""
+          if [ "${REQUIRE_CORE_VERSION}" = "true" ]; then
+            EXTRA_ARGS="--update-peer"
+          fi
+          node scripts/update-versions.js "${PACKAGE_FILTER}" "${TARGET_VERSION}" ${EXTRA_ARGS}
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm --filter "${PACKAGE_FILTER}" publish --access public --no-git-checks
