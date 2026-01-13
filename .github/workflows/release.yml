@@ -6,10 +6,25 @@ on:
       - "core-v*.*.*"
       - "react-v*.*.*"
       - "vue-v*.*.*"
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package to publish
+        type: choice
+        options:
+          - core
+          - react
+          - vue
+        required: false
+      version:
+        description: Version to publish (e.g., 0.4.0)
+        type: string
+        required: false
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.package != '' && inputs.version != '')
     permissions:
       contents: read
     steps:
@@ -21,9 +36,15 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
+      - name: Resolve tag name
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            echo "TAG_NAME=${{ inputs.package }}-v${{ inputs.version }}" >> "$GITHUB_ENV"
+          else
+            echo "TAG_NAME=${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
+          fi
       - name: Select package
         run: |
-          TAG_NAME="${GITHUB_REF_NAME}"
           if [[ "${TAG_NAME}" == core-v* ]]; then
             echo "PACKAGE_FILTER=./packages/core" >> "$GITHUB_ENV"
             echo "PACKAGE_NAME=@zachhandley/ez-i18n" >> "$GITHUB_ENV"
