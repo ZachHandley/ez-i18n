@@ -1,0 +1,65 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - "core-v*.*.*"
+      - "react-v*.*.*"
+      - "vue-v*.*.*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+      - name: Select package
+        run: |
+          TAG_NAME="${GITHUB_REF_NAME}"
+          if [[ "${TAG_NAME}" == core-v* ]]; then
+            echo "PACKAGE_FILTER=./packages/core" >> "$GITHUB_ENV"
+            echo "PACKAGE_NAME=@zachhandley/ez-i18n" >> "$GITHUB_ENV"
+          elif [[ "${TAG_NAME}" == react-v* ]]; then
+            echo "PACKAGE_FILTER=./packages/react" >> "$GITHUB_ENV"
+            echo "PACKAGE_NAME=@zachhandley/ez-i18n-react" >> "$GITHUB_ENV"
+            echo "REQUIRE_CORE_VERSION=true" >> "$GITHUB_ENV"
+          elif [[ "${TAG_NAME}" == vue-v* ]]; then
+            echo "PACKAGE_FILTER=./packages/vue" >> "$GITHUB_ENV"
+            echo "PACKAGE_NAME=@zachhandley/ez-i18n-vue" >> "$GITHUB_ENV"
+            echo "REQUIRE_CORE_VERSION=true" >> "$GITHUB_ENV"
+          else
+            echo "Unknown tag prefix: ${TAG_NAME}" >&2
+            exit 1
+          fi
+          echo "TARGET_VERSION=${TAG_NAME#*-v}" >> "$GITHUB_ENV"
+      - name: Validate core dependency is published
+        if: env.REQUIRE_CORE_VERSION == 'true'
+        run: |
+          CORE_VERSION="$(npm view "@zachhandley/ez-i18n" version 2>/dev/null || echo "0.0.0")"
+          if [ "$(printf '%s\n' "${CORE_VERSION}" "${TARGET_VERSION}" | sort -V | tail -n1)" != "${CORE_VERSION}" ]; then
+            echo "Core version ${CORE_VERSION} is older than required ${TARGET_VERSION}" >&2
+            exit 1
+          fi
+      - name: Validate version is newer than npm
+        run: |
+          CURRENT_VERSION="$(npm view "${PACKAGE_NAME}" version 2>/dev/null || echo "0.0.0")"
+          if [ "$(printf '%s\n' "${CURRENT_VERSION}" "${TARGET_VERSION}" | sort -V | tail -n1)" != "${TARGET_VERSION}" ] || [ "${CURRENT_VERSION}" = "${TARGET_VERSION}" ]; then
+            echo "Tag version ${TARGET_VERSION} is not greater than npm version ${CURRENT_VERSION}" >&2
+            exit 1
+          fi
+      - name: Update package version from tag
+        run: |
+          node -e "const fs=require('fs');const path=require('path');const pkgPath=path.join(process.env.PACKAGE_FILTER,'package.json');const pkg=JSON.parse(fs.readFileSync(pkgPath,'utf8'));pkg.version=process.env.TARGET_VERSION;if (process.env.REQUIRE_CORE_VERSION==='true' && pkg.peerDependencies && pkg.peerDependencies['@zachhandley/ez-i18n']) {pkg.peerDependencies['@zachhandley/ez-i18n']=`>=${process.env.TARGET_VERSION}`;}fs.writeFileSync(pkgPath,JSON.stringify(pkg,null,2)+'\n');"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm --filter "${PACKAGE_FILTER}" publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}

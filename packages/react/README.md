@@ -20,11 +20,21 @@ function MyComponent() {
     <div>
       <h1>{t('common.welcome')}</h1>
       <p>{t('greeting', { name: 'World' })}</p>
+      <p>{t('[i18n:greeting|name=World]')}</p>
       <button onClick={() => setLocale('es')}>Español</button>
       <p>Current locale: {locale}</p>
     </div>
   );
 }
+```
+
+### Embedded i18n Strings
+
+`t()` accepts embedded i18n strings, which are formatted in the active locale:
+
+```tsx
+<p>{t('[i18n:greeting|name=World]')}</p>
+<p>{t('Hello [i18n:greeting|name=World]!')}</p>
 ```
 
 ## API

@@ -327,11 +327,26 @@ Astro component for i18n hydration. Place in your layout's `<head>`.
 
 ### `$t(key, params?)`
 
-Translate a key with optional interpolation.
+Translate a key with optional interpolation. Also accepts embedded i18n strings and formats them in-place.
 
 ```typescript
 $t('greeting'); // "Hello"
 $t('greeting', { name: 'World' }); // "Hello, {name}" -> "Hello, World"
+```
+
+Embedded i18n strings let servers store a key + params, and clients format in their locale:
+
+```typescript
+$t('[i18n:common.welcome]'); // "Welcome"
+$t('[i18n:greeting|name=World]'); // "Hello, World"
+$t('Hello [i18n:greeting|name=World]!');
+```
+
+If you pass params to `$t` while formatting embedded strings, only matching keys are overridden:
+
+```typescript
+$t('[i18n:greeting|name=World&age=25]', { age: 26 });
+// "Hello, World (26)"
 ```
 
 ### `setLocale(locale, options?)`

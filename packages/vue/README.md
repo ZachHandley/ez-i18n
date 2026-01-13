@@ -37,6 +37,7 @@ Use the global properties `$t`, `$locale`, and `$setLocale`:
   <div>
     <h1>{{ $t('welcome.title') }}</h1>
     <p>{{ $t('welcome.message', { name: userName }) }}</p>
+    <p>{{ $t('[i18n:greeting|name=World]') }}</p>
 
     <div>
       <span>Current locale: {{ $locale }}</span>
@@ -88,6 +89,17 @@ const name = ref('Alice');
 // tc() returns a Vue Ref that automatically updates on locale change
 const greeting = tc('common.greeting', { name: 'World' });
 </script>
+```
+
+### Embedded i18n Strings
+
+`t()` and `$t()` also accept embedded i18n strings, which are formatted in the active locale:
+
+```vue
+<template>
+  <p>{{ $t('[i18n:greeting|name=World]') }}</p>
+  <p>{{ $t('Hello [i18n:greeting|name=World]!') }}</p>
+</template>
 ```
 
 ## Features

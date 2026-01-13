@@ -1,6 +1,6 @@
 {
   "name": "@zachhandley/ez-i18n-monorepo",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "private": true,
   "description": "Cookie-based i18n for Astro + Vue + React. No URL prefixes, reactive language switching.",
   "type": "module",
@@ -35,8 +35,5 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.7.2"
   },
-  "packageManager": "pnpm@10.17.1+sha512.17c560fca4867ae9473a3899ad84a88334914f379be46d455cbf92e5cf4b39d34985d452d2583baf19967fa76cb5c17bc9e245529d0b98745721aa7200ecaf7a",
-  "dependencies": {
-    "@zachhandley/ez-i18n": "0.3.4"
-  }
+  "packageManager": "pnpm@10.17.1+sha512.17c560fca4867ae9473a3899ad84a88334914f379be46d455cbf92e5cf4b39d34985d452d2583baf19967fa76cb5c17bc9e245529d0b98745721aa7200ecaf7a"
 }

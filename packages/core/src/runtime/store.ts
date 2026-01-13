@@ -175,6 +175,65 @@ export function getTranslations(): Record<string, unknown> {
 // Translation Functions
 // ============================================================================
 
+const embeddedI18nPattern = /\[i18n:([^\]|]+)(?:\|([^\]]+))?]/g;
+
+function parseEmbeddedParams(paramString?: string): Record<string, string> {
+  if (!paramString) return {};
+  const params = new URLSearchParams(paramString);
+  const result: Record<string, string> = {};
+  for (const [key, value] of params) {
+    result[key] = value;
+  }
+  return result;
+}
+
+function mergeEmbeddedParams(
+  embeddedParams: Record<string, string>,
+  overrideParams?: Record<string, string | number>
+): Record<string, string | number> | undefined {
+  const embeddedKeys = Object.keys(embeddedParams);
+  if (embeddedKeys.length === 0) return undefined;
+  const merged: Record<string, string | number> = { ...embeddedParams };
+  if (overrideParams) {
+    for (const key of embeddedKeys) {
+      if (key in overrideParams) {
+        merged[key] = overrideParams[key];
+      }
+    }
+  }
+  return merged;
+}
+
+function formatEmbeddedString(
+  str: string,
+  overrideParams: Record<string, string | number> | undefined,
+  translateKey: (key: string, params?: Record<string, string | number>) => string
+): string {
+  if (!str.includes('[i18n:')) return str;
+  return str.replace(embeddedI18nPattern, (_match, embeddedKey, paramString) => {
+    const embeddedParams = parseEmbeddedParams(paramString);
+    const mergedParams = mergeEmbeddedParams(embeddedParams, overrideParams);
+    return translateKey(embeddedKey, mergedParams);
+  });
+}
+
+function translateKeyWithTranslations(
+  trans: Record<string, unknown>,
+  key: string,
+  params?: Record<string, string | number>
+): string {
+  const value = getNestedValue(trans, key);
+
+  if (typeof value !== 'string') {
+    if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+      console.warn('[ez-i18n] Missing translation:', key);
+    }
+    return key;
+  }
+
+  return interpolate(value, params);
+}
+
 /**
  * Get translations, checking SSR global context as fallback
  * This handles cross-bundle SSR where middleware and Vue have different store instances
@@ -201,16 +260,14 @@ function getTranslationsWithSSRFallback(): Record<string, unknown> {
  */
 export function t(key: string, params?: Record<string, string | number>): string {
   const trans = getTranslationsWithSSRFallback();
-  const value = getNestedValue(trans, key);
+  const translate = (lookupKey: string, lookupParams?: Record<string, string | number>) =>
+    translateKeyWithTranslations(trans, lookupKey, lookupParams);
 
-  if (typeof value !== 'string') {
-    if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
-      console.warn('[ez-i18n] Missing translation:', key);
-    }
-    return key;
+  if (key.includes('[i18n:')) {
+    return formatEmbeddedString(key, params, translate);
   }
 
-  return interpolate(value, params);
+  return translate(key, params);
 }
 
 /**
@@ -241,15 +298,13 @@ export function tc(
     const effectiveTrans = Object.keys(trans).length === 0
       ? (globalThis.__EZ_I18N__?.translations ?? trans)
       : trans;
-    const value = getNestedValue(effectiveTrans, key);
+    const translate = (lookupKey: string, lookupParams?: Record<string, string | number>) =>
+      translateKeyWithTranslations(effectiveTrans, lookupKey, lookupParams);
 
-    if (typeof value !== 'string') {
-      if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
-        console.warn('[ez-i18n] Missing translation:', key);
-      }
-      return key;
+    if (key.includes('[i18n:')) {
+      return formatEmbeddedString(key, params, translate);
     }
 
-    return interpolate(value, params);
+    return translate(key, params);
   });
 }
