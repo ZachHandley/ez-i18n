@@ -74,6 +74,8 @@ jobs:
             echo "Tag version ${TARGET_VERSION} is not greater than npm version ${CURRENT_VERSION}" >&2
             exit 1
           fi
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
       - name: Update package version from tag
         run: |
           EXTRA_ARGS=""
@@ -81,8 +83,6 @@ jobs:
             EXTRA_ARGS="--update-peer"
           fi
           node scripts/update-versions.cjs "${PACKAGE_FILTER}" "${TARGET_VERSION}" ${EXTRA_ARGS}
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
       - run: pnpm --filter "${PACKAGE_FILTER}" publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}

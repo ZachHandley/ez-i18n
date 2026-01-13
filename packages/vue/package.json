@@ -44,7 +44,7 @@
   },
   "peerDependencies": {
     "@nanostores/vue": "^0.10.0",
-    "@zachhandley/ez-i18n": ">=0.4.0",
+    "@zachhandley/ez-i18n": "workspace:*",
     "nanostores": "^0.9.0 || ^0.10.0 || ^0.11.0",
     "vue": "^3.4.0"
   },
