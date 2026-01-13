@@ -6,6 +6,7 @@ on:
       - "core-v*.*.*"
       - "react-v*.*.*"
       - "vue-v*.*.*"
+      - "packages-v*.*.*"
   workflow_dispatch:
     inputs:
       package:
@@ -46,43 +47,78 @@ jobs:
           if [[ "${TAG_NAME}" == core-v* ]]; then
             echo "PACKAGE_FILTER=./packages/core" >> "$GITHUB_ENV"
             echo "PACKAGE_NAME=@zachhandley/ez-i18n" >> "$GITHUB_ENV"
+            echo "PUBLISH_MODE=single" >> "$GITHUB_ENV"
           elif [[ "${TAG_NAME}" == react-v* ]]; then
             echo "PACKAGE_FILTER=./packages/react" >> "$GITHUB_ENV"
             echo "PACKAGE_NAME=@zachhandley/ez-i18n-react" >> "$GITHUB_ENV"
             echo "REQUIRE_CORE_VERSION=true" >> "$GITHUB_ENV"
+            echo "PUBLISH_MODE=single" >> "$GITHUB_ENV"
           elif [[ "${TAG_NAME}" == vue-v* ]]; then
             echo "PACKAGE_FILTER=./packages/vue" >> "$GITHUB_ENV"
             echo "PACKAGE_NAME=@zachhandley/ez-i18n-vue" >> "$GITHUB_ENV"
             echo "REQUIRE_CORE_VERSION=true" >> "$GITHUB_ENV"
+            echo "PUBLISH_MODE=single" >> "$GITHUB_ENV"
+          elif [[ "${TAG_NAME}" == packages-v* ]]; then
+            echo "PUBLISH_MODE=packages" >> "$GITHUB_ENV"
           else
             echo "Unknown tag prefix: ${TAG_NAME}" >&2
             exit 1
           fi
-          echo "TARGET_VERSION=${TAG_NAME#*-v}" >> "$GITHUB_ENV"
+          RAW_VERSION="${TAG_NAME#*-v}"
+          echo "TARGET_VERSION=${RAW_VERSION#v}" >> "$GITHUB_ENV"
       - name: Validate core dependency is published
         if: env.REQUIRE_CORE_VERSION == 'true'
         run: |
-          CORE_VERSION="$(npm view "@zachhandley/ez-i18n" version 2>/dev/null || echo "0.0.0")"
+          CORE_VERSION_RAW="$(npm view "@zachhandley/ez-i18n" version 2>/dev/null || echo "0.0.0")"
+          CORE_VERSION="${CORE_VERSION_RAW#v}"
+          TARGET_VERSION="${TARGET_VERSION#v}"
           if [ "$(printf '%s\n' "${CORE_VERSION}" "${TARGET_VERSION}" | sort -V | tail -n1)" != "${CORE_VERSION}" ]; then
             echo "Core version ${CORE_VERSION} is older than required ${TARGET_VERSION}" >&2
             exit 1
           fi
       - name: Validate version is newer than npm
         run: |
-          CURRENT_VERSION="$(npm view "${PACKAGE_NAME}" version 2>/dev/null || echo "0.0.0")"
-          if [ "$(printf '%s\n' "${CURRENT_VERSION}" "${TARGET_VERSION}" | sort -V | tail -n1)" != "${TARGET_VERSION}" ] || [ "${CURRENT_VERSION}" = "${TARGET_VERSION}" ]; then
-            echo "Tag version ${TARGET_VERSION} is not greater than npm version ${CURRENT_VERSION}" >&2
-            exit 1
+          TARGET_VERSION="${TARGET_VERSION#v}"
+          if [ "${PUBLISH_MODE}" = "packages" ]; then
+            for NAME in "@zachhandley/ez-i18n" "@zachhandley/ez-i18n-react" "@zachhandley/ez-i18n-vue"; do
+              CURRENT_VERSION_RAW="$(npm view "${NAME}" version 2>/dev/null || echo "0.0.0")"
+              CURRENT_VERSION="${CURRENT_VERSION_RAW#v}"
+              if [ "$(printf '%s\n' "${CURRENT_VERSION}" "${TARGET_VERSION}" | sort -V | tail -n1)" != "${TARGET_VERSION}" ] || [ "${CURRENT_VERSION}" = "${TARGET_VERSION}" ]; then
+                echo "Tag version ${TARGET_VERSION} is not greater than npm version ${CURRENT_VERSION} for ${NAME}" >&2
+                exit 1
+              fi
+            done
+          else
+            CURRENT_VERSION_RAW="$(npm view "${PACKAGE_NAME}" version 2>/dev/null || echo "0.0.0")"
+            CURRENT_VERSION="${CURRENT_VERSION_RAW#v}"
+            if [ "$(printf '%s\n' "${CURRENT_VERSION}" "${TARGET_VERSION}" | sort -V | tail -n1)" != "${TARGET_VERSION}" ] || [ "${CURRENT_VERSION}" = "${TARGET_VERSION}" ]; then
+              echo "Tag version ${TARGET_VERSION} is not greater than npm version ${CURRENT_VERSION}" >&2
+              exit 1
+            fi
           fi
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: Update package version from tag
         run: |
           EXTRA_ARGS=""
-          if [ "${REQUIRE_CORE_VERSION}" = "true" ]; then
-            EXTRA_ARGS="--update-peer"
+          if [ "${PUBLISH_MODE}" = "packages" ]; then
+            node scripts/update-versions.cjs "./packages/core" "${TARGET_VERSION}"
+            node scripts/update-versions.cjs "./packages/react" "${TARGET_VERSION}" --update-peer
+            node scripts/update-versions.cjs "./packages/vue" "${TARGET_VERSION}" --update-peer
+          else
+            if [ "${REQUIRE_CORE_VERSION}" = "true" ]; then
+              EXTRA_ARGS="--update-peer"
+            fi
+            node scripts/update-versions.cjs "${PACKAGE_FILTER}" "${TARGET_VERSION}" ${EXTRA_ARGS}
           fi
-          node scripts/update-versions.cjs "${PACKAGE_FILTER}" "${TARGET_VERSION}" ${EXTRA_ARGS}
-      - run: pnpm --filter "${PACKAGE_FILTER}" publish --access public --no-git-checks
+      - name: Publish packages
+        run: |
+          if [ "${PUBLISH_MODE}" = "packages" ]; then
+            pnpm --filter "./packages/core" publish --access public --no-git-checks
+            pnpm --filter "./packages/react" publish --access public --no-git-checks
+            pnpm --filter "./packages/vue" publish --access public --no-git-checks
+          else
+            pnpm --filter "${PACKAGE_FILTER}" publish --access public --no-git-checks
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
