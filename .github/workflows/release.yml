@@ -80,7 +80,7 @@ jobs:
           if [ "${REQUIRE_CORE_VERSION}" = "true" ]; then
             EXTRA_ARGS="--update-peer"
           fi
-          node scripts/update-versions.js "${PACKAGE_FILTER}" "${TARGET_VERSION}" ${EXTRA_ARGS}
+          node scripts/update-versions.cjs "${PACKAGE_FILTER}" "${TARGET_VERSION}" ${EXTRA_ARGS}
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm --filter "${PACKAGE_FILTER}" publish --access public --no-git-checks

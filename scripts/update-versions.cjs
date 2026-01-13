@@ -8,7 +8,7 @@ const targetVersion = args[1];
 const updatePeer = args.includes('--update-peer');
 
 if (!packagePath || !targetVersion) {
-  console.error('Usage: update-versions.js <packagePath> <version> [--update-peer]');
+  console.error('Usage: update-versions.cjs <packagePath> <version> [--update-peer]');
   process.exit(1);
 }
 
