@@ -79,21 +79,22 @@ jobs:
           fi
       - name: Validate version is not older than npm
         run: |
-          TARGET_VERSION="${TARGET_VERSION#v}"
           if [ "${PUBLISH_MODE}" = "packages" ]; then
             for NAME in "@zachhandley/ez-i18n" "@zachhandley/ez-i18n-react" "@zachhandley/ez-i18n-vue"; do
               CURRENT_VERSION_RAW="$(npm view "${NAME}" version 2>/dev/null || echo "0.0.0")"
-              CURRENT_VERSION="${CURRENT_VERSION_RAW#v}"
-              if [ "$(printf '%s\n' "${CURRENT_VERSION}" "${TARGET_VERSION}" | sort -V | tail -n1)" = "${CURRENT_VERSION}" ]; then
-                echo "Tag version ${TARGET_VERSION} is older than npm version ${CURRENT_VERSION} for ${NAME}" >&2
+              if node scripts/compare-versions.cjs "${CURRENT_VERSION_RAW}" "${TARGET_VERSION}"; then
+                :
+              else
+                echo "Tag version ${TARGET_VERSION#v} is older than npm version ${CURRENT_VERSION_RAW#v} for ${NAME}" >&2
                 exit 1
               fi
             done
           else
             CURRENT_VERSION_RAW="$(npm view "${PACKAGE_NAME}" version 2>/dev/null || echo "0.0.0")"
-            CURRENT_VERSION="${CURRENT_VERSION_RAW#v}"
-            if [ "$(printf '%s\n' "${CURRENT_VERSION}" "${TARGET_VERSION}" | sort -V | tail -n1)" = "${CURRENT_VERSION}" ]; then
-              echo "Tag version ${TARGET_VERSION} is older than npm version ${CURRENT_VERSION}" >&2
+            if node scripts/compare-versions.cjs "${CURRENT_VERSION_RAW}" "${TARGET_VERSION}"; then
+              :
+            else
+              echo "Tag version ${TARGET_VERSION#v} is older than npm version ${CURRENT_VERSION_RAW#v}" >&2
               exit 1
             fi
           fi
