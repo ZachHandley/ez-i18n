@@ -779,6 +779,7 @@ async function __loadPublicJson(url, absolutePath) {
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     const response = await fetch(url);
     if (!response.ok) {
+      if (response.status === 404) return {};
       throw new Error(\`Failed to fetch translations from \${url}: \${response.status}\`);
     }
     return __parseJsonResponse(response);
@@ -789,6 +790,7 @@ async function __loadPublicJson(url, absolutePath) {
   if (assets && typeof assets.fetch === 'function') {
     const response = await assets.fetch(new URL(url, 'https://assets.local'));
     if (!response.ok) {
+      if (response.status === 404) return {};
       throw new Error(\`Failed to fetch translations from \${url}: \${response.status}\`);
     }
     return __parseJsonResponse(response);
