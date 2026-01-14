@@ -769,27 +769,43 @@ function __deepMerge(target, ...sources) {
 function getPublicLoaderCode(): string {
   return `
 async function __loadPublicJson(url, absolutePath) {
+  async function __parseJsonResponse(response) {
+    const text = await response.text();
+    if (!text) return {};
+    return JSON.parse(text);
+  }
+
   // Browser - fetch with relative URL
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-    return fetch(url).then(r => r.json());
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(\`Failed to fetch translations from \${url}: \${response.status}\`);
+    }
+    return __parseJsonResponse(response);
   }
 
   // Cloudflare Workers - use ASSETS binding (set by middleware)
   const assets = globalThis.__EZ_I18N_ASSETS__;
   if (assets && typeof assets.fetch === 'function') {
     const response = await assets.fetch(new URL(url, 'https://assets.local'));
-    return response.json();
+    if (!response.ok) {
+      throw new Error(\`Failed to fetch translations from \${url}: \${response.status}\`);
+    }
+    return __parseJsonResponse(response);
   }
 
   // Deno - use Deno.readTextFile
   if (typeof Deno !== 'undefined') {
     const content = await Deno.readTextFile(absolutePath);
+    if (!content) return {};
     return JSON.parse(content);
   }
 
   // Node.js / Bun - use absolute path with node:fs
   const { readFileSync } = await import('node:fs');
-  return JSON.parse(readFileSync(absolutePath, 'utf-8'));
+  const content = readFileSync(absolutePath, 'utf-8');
+  if (!content) return {};
+  return JSON.parse(content);
 }`;
 }
 
