@@ -437,6 +437,25 @@ export function tc(key, params) {
           }
         }
       });
+
+      // Handle modified translation files (needed for public/ files which don't trigger handleHotUpdate)
+      server.watcher.on('change', (file) => {
+        if (!file.endsWith('.json')) return;
+
+        // Check if the changed file is a translation file
+        for (const info of translationInfo.values()) {
+          if (info.files.includes(file)) {
+            // Invalidate the virtual translations module
+            const mod = server.moduleGraph.getModuleById(RESOLVED_PREFIX + VIRTUAL_TRANSLATIONS);
+            if (mod) {
+              server.moduleGraph.invalidateModule(mod);
+              // Full reload to ensure translations are updated everywhere
+              server.ws.send({ type: 'full-reload', path: '*' });
+            }
+            break;
+          }
+        }
+      });
     },
   };
 }
