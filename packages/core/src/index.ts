@@ -104,6 +104,8 @@ declare module 'ez-i18n:config' {
   export const localeToBCP47: Record<string, string>;
   /** Text direction for each locale ('ltr' or 'rtl') */
   export const localeDirections: Record<string, 'ltr' | 'rtl'>;
+  /** Explicit cookie domain override (undefined = auto-detect from hostname) */
+  export const cookieDomain: string | undefined;
 }
 
 declare module 'ez-i18n:runtime' {

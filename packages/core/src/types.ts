@@ -71,6 +71,13 @@ export interface EzI18nConfig {
    * @default true when using folder-based translations config
    */
   pathBasedNamespacing?: boolean;
+
+  /**
+   * Explicit cookie domain for cross-subdomain locale sharing.
+   * When set, the locale cookie will include this domain (e.g., '.example.com').
+   * When not set, the domain is auto-detected from the request hostname.
+   */
+  cookieDomain?: string;
 }
 
 /**
@@ -89,6 +96,8 @@ export interface ResolvedEzI18nConfig {
   pathBasedNamespacing: boolean;
   /** Base directory for each locale (used for namespace calculation) */
   localeBaseDirs: Record<string, string>;
+  /** Explicit cookie domain override */
+  cookieDomain: string | undefined;
 }
 
 /**

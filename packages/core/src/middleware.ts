@@ -1,20 +1,20 @@
 import { defineMiddleware } from 'astro:middleware';
+import { getDomain } from 'tldts';
 import type { TranslateFunction } from './types';
 
 /**
- * Get the cookie domain for proper subdomain support
- * - localhost/127.0.0.1: no domain (defaults to exact host)
- * - production domains: .domain.tld format for subdomain support
+ * Get the cookie domain for subdomain support using Mozilla's Public Suffix List.
+ * Returns the registrable domain prefixed with a dot for cross-subdomain sharing.
+ *
+ * - localhost/IPs: undefined (defaults to exact host)
+ * - staryo.zach-64e.workers.dev: .zach-64e.workers.dev
+ * - app.example.com: .example.com
+ * - example.co.uk: .example.co.uk
  */
 function getCookieDomain(hostname: string): string | undefined {
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return undefined;
-  }
-  const parts = hostname.split('.');
-  if (parts.length >= 2) {
-    return '.' + parts.slice(-2).join('.');
-  }
-  return undefined;
+  const domain = getDomain(hostname);
+  if (!domain) return undefined;
+  return '.' + domain;
 }
 
 /**
@@ -45,7 +45,7 @@ function createT(translations: Record<string, unknown>): TranslateFunction {
  */
 export const onRequest = defineMiddleware(async ({ cookies, request, locals, redirect }, next) => {
   // Import config from virtual module (provided by vite-plugin)
-  const { locales, defaultLocale, cookieName } = await import('ez-i18n:config');
+  const { locales, defaultLocale, cookieName, cookieDomain } = await import('ez-i18n:config');
 
   const url = new URL(request.url);
 
@@ -100,13 +100,14 @@ export const onRequest = defineMiddleware(async ({ cookies, request, locals, red
 
   // Update cookie if changed via query param, then redirect to clean URL
   if (langParam && langParam !== cookieValue && locales.includes(langParam)) {
-    const domain = getCookieDomain(url.hostname);
+    // Use explicit config domain, or auto-detect from hostname
+    const domain = cookieDomain || getCookieDomain(url.hostname);
 
     cookies.set(cookieName, locale, {
       path: '/',
       maxAge: 60 * 60 * 24 * 365, // 1 year
       sameSite: 'lax',
-      ...(domain && { domain }),
+      ...(domain ? { domain } : {}),
     });
 
     // Redirect to clean URL (remove ?lang param)

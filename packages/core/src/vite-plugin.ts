@@ -87,6 +87,7 @@ export function vitePlugin(config: EzI18nConfig): Plugin {
             translations: cache.discovered,
             pathBasedNamespacing,
             localeBaseDirs,
+            cookieDomain: config.cookieDomain,
           };
           useCache = true;
 
@@ -152,6 +153,7 @@ export function vitePlugin(config: EzI18nConfig): Plugin {
           translations,
           pathBasedNamespacing,
           localeBaseDirs,
+          cookieDomain: config.cookieDomain,
         };
 
         // Build translation info for each locale
@@ -229,6 +231,9 @@ export const localeToBCP47 = ${JSON.stringify(localeToBCP47)};
 
 /** Text direction for each locale ('ltr' or 'rtl') */
 export const localeDirections = ${JSON.stringify(localeDirections)};
+
+/** Explicit cookie domain override (undefined = auto-detect) */
+export const cookieDomain = ${JSON.stringify(resolved.cookieDomain)};
 `;
       }
 
@@ -841,5 +846,6 @@ export function resolveConfig(config: EzI18nConfig): ResolvedEzI18nConfig {
     translations: {},
     pathBasedNamespacing: config.pathBasedNamespacing ?? isAutoDiscovery,
     localeBaseDirs: {},
+    cookieDomain: config.cookieDomain,
   };
 }
