@@ -7,6 +7,7 @@ export default defineConfig([
       'src/index.ts',
       'src/runtime/index.ts',
       'src/utils/index.ts',
+      'src/utils/locales.ts',
     ],
     format: ['esm'],
     dts: true,

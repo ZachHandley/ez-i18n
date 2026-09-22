@@ -26,6 +26,10 @@
     "./utils": {
       "types": "./dist/utils/index.d.ts",
       "import": "./dist/utils/index.js"
+    },
+    "./locales": {
+      "types": "./dist/utils/locales.d.ts",
+      "import": "./dist/utils/locales.js"
     }
   },
   "files": [
